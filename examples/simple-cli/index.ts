@@ -1,40 +1,62 @@
-import * as zm from "zod/v4-mini";
-import { CLI } from "../../packages/cli/cli";
+import { z } from "zod/v4-mini";
+import { CLI } from "bun-cli-creator";
 
 const cli = new CLI();
 const t = cli.t;
 
 const commands = cli.commands({
-  hello: cli.command
+  // Task management command
+  task: cli.command
     .args({
-      verbose: cli.arg
-        .input(zm.boolean())
-        .options({ short: "v", multiple: true }),
-      name: cli.arg.input(zm.object({ name: zm.string() })),
-      hi: cli.arg.input(zm.string()).options({ multiple: true }),
+      add: cli.arg.input(z.string()),
+      priority: cli.arg.input(z.enum(["low", "medium", "high"])),
+      due: cli.arg.input(z.string()),
+      list: cli.arg.input(z.boolean()),
     })
     .run(({ input }) => {
-      t.log("verbose:", input.verbose);
-      t.log("name:", input.name?.name);
+      if (input.list) {
+        t.log("Listing all tasks...");
+        return;
+      }
+
+      if (input.add) {
+        t.log(`Adding new task: ${input.add}`);
+        t.log(`Priority: ${input.priority || "medium"}`);
+        t.log(`Due date: ${input.due || "No due date"}`);
+      }
     }),
-  goodbye: cli.command
+
+  // Project management command
+  project: cli.command
     .args({
-      verbose: cli.arg.input(zm.optional(zm.boolean())).options({ short: "v" }),
-      name: cli.arg.input(zm.object({ name: zm.string() })),
-      a: cli.arg.input(zm.optional(zm.string())),
+      create: cli.arg.input(z.string()),
+      members: cli.arg.input(z.array(z.string())).options({ multiple: true }),
+      verbose: cli.arg.input(z.boolean()).options({ short: "v" }),
     })
     .run(({ input }) => {
-      t.log("hi:", input.a);
-      t.log("verbose:", input.verbose);
-      t.log("name:", input.name?.name);
+      if (input.create) {
+        t.log(`Creating new project: ${input.create}`);
+        if (input.members?.length) {
+          t.log("Team members:", input.members.join(", "));
+        }
+        if (input.verbose) {
+          t.log("Additional project details will be shown...");
+        }
+      }
     }),
 });
 
+// Example usage
 commands.execute({
-  hello: {
-    verbose: [true, false],
-    name: { name: "ReverseGem" },
-    hi: "hi",
+  task: {
+    add: "Complete documentation",
+    priority: "high",
+    due: "2024-03-20",
+    list: false,
   },
-  goodbye: { name: { name: "Hi" }, a: "hi", verbose: true },
+  project: {
+    create: "New Website",
+    members: ["Alice", "Bob", "Charlie"],
+    verbose: true,
+  },
 });

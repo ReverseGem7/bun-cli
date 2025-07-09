@@ -1,0 +1,16 @@
+{
+  "name": "simple-cli",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "bun-cli-creator": "^0.1.0",
+    "zod": "^3.25.76"
+  }
+}
