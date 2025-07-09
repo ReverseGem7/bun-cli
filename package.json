@@ -1,0 +1,17 @@
+{
+  "name": "bun-cli-creator",
+  "type": "module",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./packages/cli/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}
