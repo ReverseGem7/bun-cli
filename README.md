@@ -23,12 +23,12 @@ See `examples/simple-cli/index.ts` for a usage example.
 - [x] Add support for Zod-based schema validation
 - [x] Add support for multiple arguments
 - [x] Add support for aliases
-- [ ] Add the parseArgs method
+- [x] Add the parseArgs method
+- [x] Add support for positional arguments
+- [x] Add support for subcommands
 - [ ] Improve the Logger/Terminal class
 - [ ] Implement help command
-- [ ] Add support for positional arguments
 - [ ] Improve documentation and usage examples
-- [ ] Add support for subcommands
 - [ ] Implement automated tests
 - [ ] Enhance error handling and user messages
 - [ ] Cleanup the codebase
