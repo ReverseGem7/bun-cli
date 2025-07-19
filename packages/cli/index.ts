@@ -1,1 +1,1 @@
-export { CLI } from "./cli.ts";
+export { CLI } from "./core";
