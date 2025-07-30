@@ -1,7 +1,4 @@
-export const unset = Symbol("unset");
-export type UnsetMarker = typeof unset;
-
-export const $type = Symbol("type");
+import type { UnsetMarker } from "../constants";
 
 export type MaybeUnset<T> = T | UnsetMarker;
 export type UndefineIfUnset<T> = T extends UnsetMarker ? undefined : T;
@@ -12,3 +9,9 @@ export type AllMethodsAny<T> = {
     ? (...args: any[]) => any
     : T[K];
 };
+
+export type DeepPartial<TObject> = TObject extends object
+  ? {
+      [P in keyof TObject]?: DeepPartial<TObject[P]>;
+    }
+  : TObject;

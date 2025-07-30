@@ -1,128 +1,57 @@
+import type z from "zod/v4/core";
 import * as z4 from "zod/v4";
-import * as z from "zod/v4/core";
-import {
-  $type,
-  type AllMethodsAny,
-  type ConditionalIfUnset,
-  type MaybeUnset,
-  type Prettify,
-  type UndefineIfUnset,
-  type UnsetMarker,
-  unset,
-} from "./types";
-import { type FlagDescriptor, getZodSchemaFromFlag } from "./flag";
-import type { PositionalDescriptor } from "./positional";
 
-export type FlagMap<
-  T extends Record<string, FlagDescriptor> = Record<string, FlagDescriptor>
-> = {
-  _type: "flags";
-  raw: z.$ZodObject;
-  def: T;
-};
-
-export type RunableCommand<T extends { flags: any; positionals: any; output: any }> = {
-  _type: "runable";
-  def: T;
-  flags: UndefineIfUnset<T["flags"]>;
-  positionals: UndefineIfUnset<T["positionals"]>;
-};
-
-type Command = {
-  flags: MaybeUnset<FlagMap<Flag>>;
-  positionals: MaybeUnset<Positional>;
-};
-
-type Flags<C extends Command> = ConditionalIfUnset<
-  C["flags"],
-  {
-    flags: <F extends Record<string, FlagDescriptor<any>>>(
-      f: F
-    ) => CommandBuilder<{
-      flags: FlagMap<F>;
-      positionals: C["positionals"];
-    }>;
-  }
->;
-
-type Positionals<C extends Command> = ConditionalIfUnset<
-  C["positionals"],
-  {
-    positionals: <P extends [z.$ZodType, ...z.$ZodType[]]>(
-      p: P
-    ) => CommandBuilder<{
-      flags: C["flags"];
-      positionals: PositionalDescriptor<{
-        [K in keyof P]: z.output<P[K]>;
-      }>;
-    }>;
-  }
->;
-
-export type ExtractFlags<T extends Record<string, FlagDescriptor>> = {
-  [K in keyof T]: T[K] extends FlagDescriptor<infer U> ? U["type"] : never;
-};
-
-export type ExtractFlagsType<T> = T extends FlagMap<infer U>
-  ? Prettify<ExtractFlags<U>>
-  : never;
-
-export type ExtractPositionalsType<T> = T extends PositionalDescriptor<infer U>
-  ? U
-  : never;
-
-type Run<C extends Command> = {
-  run<TOutput>(
-    fn: (ctx: {
-      flags: ExtractFlagsType<C["flags"]>;
-      positionals: ExtractPositionalsType<C["positionals"]>;
-    }) => TOutput
-  ): RunableCommand<{
-    flags: C["flags"];
-    positionals: C["positionals"];
-    output: TOutput;
-  }>;
-};
-
-type CommandBuilder<
-  C extends Command = {
-    flags: UnsetMarker;
-    positionals: UnsetMarker;
-  }
-> = Flags<C> &
-  Positionals<C> &
-  Run<C> & {
-    [$type]: "CommandBuilder";
-  };
+import type { CommandBuilder, CommandTree } from "./types/command";
+import { unset, $type } from "./constants";
+import { getZodSchemaFromFlag } from "./args";
+import type { FlagMap, Flag } from "./types/flags";
+import type { Positional, PositionalDescriptor } from "./types/positionals";
+import type { MaybeUnset, DeepPartial } from "./types/util";
 
 export function createCommand(): CommandBuilder {
-  return createCommandBuilderWith({ flags: unset, positionals: unset });
+  return createCommandBuilderWith({
+    flags: unset,
+    positionals: unset,
+    subcommands: unset,
+  });
 }
-
-type Flag = Record<string, FlagDescriptor>;
-type Positional = PositionalDescriptor<any>;
 
 function createCommandBuilderWith<
   TFlags extends MaybeUnset<FlagMap<Flag>>,
-  TPositionals extends MaybeUnset<Positional>
+  TPositionals extends MaybeUnset<Positional>,
+  TSubcommands extends MaybeUnset<CommandTree>
 >(cfg: {
   flags: TFlags;
   positionals: TPositionals;
-}): CommandBuilder<{ flags: TFlags; positionals: TPositionals }> {
-  const builder: Partial<AllMethodsAny<CommandBuilder>> = {};
+  subcommands: TSubcommands;
+}): CommandBuilder<{
+  flags: TFlags;
+  positionals: TPositionals;
+  subcommands: TSubcommands;
+}> {
+  const builder: DeepPartial<CommandBuilder> = {};
 
   if (cfg.flags === unset) {
     builder.flags = <T extends Flag>(f: T) => {
+      const shortToLong = Object.fromEntries(
+        Object.entries(f)
+          .filter(([, v]) => "config" in v && v.config?.short)
+          .map(([long, v]) => [v.config?.short, long])
+      );
+
       const shape = Object.fromEntries(
         Object.entries(f).map(([k, v]) => [k, getZodSchemaFromFlag(v)])
       );
+
       const schema = z4.object(shape);
+
       const flagMap: FlagMap<T> = {
-        _type: "flags",
+        [$type]: "flags",
         raw: schema,
-        def: f,
+        shortToLong,
       };
-      return createCommandBuilderWith<FlagMap<T>, TPositionals>({
+
+      return createCommandBuilderWith<FlagMap<T>, TPositionals, TSubcommands>({
         ...cfg,
         flags: flagMap,
       });
@@ -135,27 +64,29 @@ function createCommandBuilderWith<
       const descriptor: PositionalDescriptor<{
         [K in keyof P]: z.output<P[K]>;
       }> = {
-        _type: "positional",
+        [$type]: "positional",
         raw: tuple,
-        def: null as any,
       };
-      return createCommandBuilderWith<TFlags, typeof descriptor>({
+      return createCommandBuilderWith<TFlags, typeof descriptor, TSubcommands>({
         ...cfg,
         positionals: descriptor,
       });
     };
   }
 
-  builder.run = <TOutput>(
-    fn: (ctx: {
-      flags: TFlags extends FlagMap<infer U> ? ExtractFlags<U> : {};
-      positionals: TPositionals extends PositionalDescriptor<infer U> ? U : [];
-    }) => TOutput
-  ) => {
+  builder.subcommands = (subcommands: TSubcommands) => {
+    return createCommandBuilderWith<TFlags, TPositionals, typeof subcommands>({
+      ...cfg,
+      subcommands: subcommands,
+    });
+  };
+
+  builder.run = (fn: (ctx: any) => any) => {
     return {
-      _type: "runable",
+      [$type]: "runable",
       flags: cfg.flags === unset ? undefined : cfg.flags,
       positionals: cfg.positionals === unset ? undefined : cfg.positionals,
+      subcommands: cfg.subcommands === unset ? undefined : cfg.subcommands,
       runFn: fn,
     };
   };
@@ -165,5 +96,6 @@ function createCommandBuilderWith<
   return builder as CommandBuilder<{
     flags: TFlags;
     positionals: TPositionals;
+    subcommands: TSubcommands;
   }>;
 }

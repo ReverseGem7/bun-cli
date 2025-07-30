@@ -1,83 +1,198 @@
+import type { RunableCommand } from "./types/run";
+
 const toCamelCase = (str: string): string => {
   return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
+const tryParseJson = (value: string): any => {
+  try {
+    return JSON.parse(value);
+  } catch {}
+  return undefined;
+};
+
 const parseValue = (value: string): any => {
-  if (value === "true") return true;
-  if (value === "false") return false;
-  if (/^\d+$/.test(value)) return parseInt(value, 10);
-  if (/^\d*\.\d+$/.test(value)) return parseFloat(value);
-  if (value.includes(",")) return value.split(",").map((v) => v.trim());
+  const jsonParsed = tryParseJson(value);
+  if (jsonParsed !== undefined) return jsonParsed;
+
+  if (value.includes(",")) {
+    const items = value.split(",").map((v) => parseValue(v.trim()));
+    return items;
+  }
   return value;
 };
 
-function setDeep(target: Record<string, any>, path: string[], value: any) {
+export function setDeep(
+  target: Record<string, any>,
+  path: string[],
+  value: any
+) {
   let obj = target;
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i]!;
-    const next = obj[key];
-    if (next !== undefined && typeof next !== "object") {
-      throw new Error(
-        `Conflicting type at "${path.slice(0, i + 1).join(".")}"`
-      );
+    if (typeof obj[key] !== "object" || obj[key] === null) {
+      obj[key] = {};
     }
-    obj[key] ??= {};
     obj = obj[key];
   }
   obj[path.at(-1)!] = value;
 }
 
-type ParsedArgs = {
-  flags: Record<string, any>;
-  positionals: string[];
+export type ParsedFlag = {
+  name: string;
+  value: any;
+  isLong: boolean;
 };
 
-export function parseArgs(): ParsedArgs {
-  const flags: Record<string, any> = {};
+type ParsedArgs = {
+  flags: Record<string, unknown>;
+  positionals: any[];
+};
+
+function stripPrefix(arg: string, isLong: boolean) {
+  if (isLong) {
+    return arg.slice(2);
+  }
+  return arg.slice(1);
+}
+
+function getDeep(obj: any, path: string[]): any {
+  return path.reduce((acc, key) => {
+    if (acc && typeof acc === "object") {
+      return acc[key];
+    }
+    return undefined;
+  }, obj);
+}
+
+function addFlag(key: string, value: unknown, flags: Record<string, unknown>) {
+  const path = key.split(".");
+
+  const current = getDeep(flags, path);
+
+  const newValue = current !== undefined ? [current, value] : value;
+
+  setDeep(flags, path, newValue);
+}
+
+export function parsePositionals(args: string[]) {
   const positionals: string[] = [];
-  const args = process.argv.slice(2);
+  const positionalIndexesInArgs: number[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (!arg!.startsWith("-")) {
+      positionals.push(arg!);
+      positionalIndexesInArgs.push(i);
+    }
+  }
+
+  return { positionals, positionalIndexesInArgs };
+}
+
+export function parseArgs(args: string[], cmd: RunableCommand): ParsedArgs {
+  const flags: Record<string, ParsedFlag> = {};
+  const positionals: any[] = [];
+  const shortToLong = cmd.flags.shortToLong;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
+    const isLong = arg.startsWith("--");
 
-    if (!arg.startsWith("--") || !arg.startsWith("-")) {
+    if (!arg.startsWith("-")) {
       positionals.push(parseValue(arg));
       continue;
     }
 
     // Handle --no-flag
     if (arg.startsWith("--no-")) {
-      const key = toCamelCase(arg.slice(5));
-      setDeep(flags, key.split("."), false);
-      continue;
-    }
-
-    // Handle --flag (true if no value follows)
-    if (
-      !arg.includes("=") &&
-      (i === args.length - 1 || args[i + 1]?.startsWith("--"))
-    ) {
-      const key = toCamelCase(arg.slice(2));
-      setDeep(flags, key.split("."), true);
+      const key = arg.slice(5);
+      addFlag(key, false, flags);
       continue;
     }
 
     // Handle --key=value or --key value
-    let key: string, value: string;
+    let name: string, rawValue: string;
 
     if (arg.includes("=")) {
-      [key, value] = arg.slice(2).split("=", 2) as [string, string];
-    } else {
-      key = arg.slice(2);
-      const next = args[++i];
-      if (!next || next.startsWith("--")) {
-        throw new Error(`Missing value for argument: --${key}`);
+      const rawArg = stripPrefix(arg, isLong);
+      const parts = rawArg.split("=", 2) as [string, string | undefined];
+
+      name = parts[0];
+
+      if (parts[1] === undefined) {
+        //Handle short flags agrupation, -f or --flag without value (true by default)
+        if (!isLong) {
+          if (name.length > 1) {
+            for (const char of name) {
+              const key = shortToLong[char];
+              if (!key) continue;
+              addFlag(key, true, flags);
+            }
+            continue;
+          }
+
+          const key = shortToLong[name];
+          if (!key) continue;
+          addFlag(key, true, flags);
+          continue;
+        }
+
+        const key = toCamelCase(name);
+        addFlag(key, true, flags);
+        continue;
       }
-      value = next;
+
+      rawValue = parts[1];
+    } else {
+      name = stripPrefix(arg, isLong);
+      const next = args[i + 1];
+
+      if (!next || next.startsWith("-")) {
+        //Handle short flags agrupation, -f or --flag without value (true by default)
+        if (!isLong) {
+          if (name.length > 1) {
+            for (const char of name) {
+              const key = shortToLong[char];
+              if (!key) continue;
+              addFlag(key, true, flags);
+            }
+            continue;
+          }
+
+          const key = shortToLong[name];
+          if (!key) continue;
+          addFlag(key, true, flags);
+          continue;
+        }
+
+        const key = toCamelCase(name);
+        addFlag(key, true, flags);
+        continue;
+      }
+      rawValue = next;
+      i++;
     }
 
-    const path = toCamelCase(key).split(".");
-    setDeep(flags, path, parseValue(value));
+    const value = parseValue(rawValue);
+    if (!isLong) {
+      if (name.length > 1) {
+        for (const char of name) {
+          const key = shortToLong[char];
+          if (!key) continue;
+          addFlag(key, value, flags);
+        }
+        continue;
+      }
+
+      const key = shortToLong[name];
+      if (!key) continue;
+      addFlag(key, value, flags);
+      continue;
+    }
+
+    const key = toCamelCase(name);
+    addFlag(key, value, flags);
   }
 
   return { flags, positionals };

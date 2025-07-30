@@ -1,7 +1,7 @@
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import { CLI } from "../../packages/cli";
 
-const { t, flag, positional, command, commands, caller } = new CLI();
+const { flag, positional, command, commands, caller, create } = new CLI();
 
 const cli = commands({
   project: {
@@ -11,19 +11,39 @@ const cli = commands({
           file: flag.input(z.literal("Hello")).options({
             short: "f",
           }),
-          pdf: flag.input(z.string().array()),
+          pdf: flag.input(z.boolean()).options({
+            short: "c",
+          }),
+          pdf2: flag.input(z.boolean()).options({
+            short: "g",
+          }),
         })
-        .positionals([positional.input(z.string())])
-
+        .positionals([
+          positional.input(z.string()),
+          positional.input(z.number()),
+        ])
+        .subcommands({
+          hello: {
+            world: command
+              .subcommands({
+                hello: {
+                  world: command.run(() => {
+                    console.timeEnd("v2");
+                    console.log("Hello World! 2");
+                  }),
+                },
+              })
+              .run(() => {
+                console.log("Hello World! 1");
+              }),
+          },
+        })
         .run(async ({ flags, positionals }) => {
-          t.log(flags, positionals);
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+          console.log(flags, positionals);
         }),
     },
   },
 });
 
-const app = caller(cli);
-app.project.new.folder({
-  flags: { file: "Hello", pdf: ["Hi"] },
-  positionals: ["Hi"],
-});
+create(cli);

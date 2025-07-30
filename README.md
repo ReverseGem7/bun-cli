@@ -1,9 +1,9 @@
-# bun-cli-creator
+# Clivex
 
 > [!IMPORTANT]  
 > 🚧 This package is still in development.
 
-bun-cli is a CLI toolkit for building command-line applications with argument parsing and validation, powered by Zod schemas.
+Clivex is a CLI toolkit for building command-line applications with argument parsing and validation, powered by Zod schemas.
 
 ## Features
 
@@ -22,13 +22,16 @@ See `examples/simple-cli/index.ts` for a usage example.
 - [x] Implement command builder pattern
 - [x] Add support for Zod-based schema validation
 - [x] Add support for multiple arguments
-- [x] Add support for aliases
 - [x] Add the parseArgs method
 - [x] Add support for positional arguments
 - [x] Add support for subcommands
-- [ ] Improve the Logger/Terminal class
+- [ ] Add support for strict mode
+- [ ] Add support for aliases
+- [ ] Add support for global flags and positionals
+- [ ] Add support for more schema validators
+- [ ] Autogenerate terminal completions
 - [ ] Implement help command
 - [ ] Improve documentation and usage examples
-- [ ] Implement automated tests
+- [ ] Implement tests
 - [ ] Enhance error handling and user messages
 - [ ] Cleanup the codebase

@@ -1,1 +1,1 @@
-export { CLI } from "./core";
+export { CLI } from "./cli";

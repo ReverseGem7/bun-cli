@@ -1,7 +1,7 @@
 {
-  "name": "bun-cli-creator",
+  "name": "clivex",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "exports": {
     ".": "./packages/cli/index.ts"
   },
@@ -9,9 +9,7 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "zod": "^4.0.5"
+    "typescript": "^5",
+    "zod": "^4.0.0"
   }
 }

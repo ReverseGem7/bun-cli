@@ -10,7 +10,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "bun-cli-creator": "^0.1.0",
-    "zod": "^3.25.76"
+    "zod": "^4.0.0"
   }
 }
