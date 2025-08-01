@@ -1,12 +1,9 @@
-import type z from "zod/v4/core";
-import * as z4 from "zod/v4";
-
 import type { CommandBuilder, CommandTree } from "./types/command";
 import { unset, $type } from "./constants";
-import { getZodSchemaFromFlag } from "./args";
 import type { FlagMap, Flag } from "./types/flags";
 import type { Positional, PositionalDescriptor } from "./types/positionals";
 import type { MaybeUnset, DeepPartial } from "./types/util";
+import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
 export function createCommand(): CommandBuilder {
   return createCommandBuilderWith({
@@ -39,16 +36,21 @@ function createCommandBuilderWith<
           .map(([long, v]) => [v.config?.short, long])
       );
 
-      const shape = Object.fromEntries(
-        Object.entries(f).map(([k, v]) => [k, getZodSchemaFromFlag(v)])
+      const multiple = Object.fromEntries(
+        Object.entries(f)
+          .filter(([, v]) => "config" in v && v.config?.multiple)
+          .map(([k, v]) => [k, v.config?.multiple])
       );
 
-      const schema = z4.object(shape);
+      const shape = Object.fromEntries(
+        Object.entries(f).map(([k, v]) => [k, v.raw])
+      );
 
       const flagMap: FlagMap<T> = {
         [$type]: "flags",
-        raw: schema,
+        raw: shape,
         shortToLong,
+        multiple,
       };
 
       return createCommandBuilderWith<FlagMap<T>, TPositionals, TSubcommands>({
@@ -59,13 +61,12 @@ function createCommandBuilderWith<
   }
 
   if (cfg.positionals === unset) {
-    builder.positionals = <P extends [z.$ZodType, ...z.$ZodType[]]>(p: P) => {
-      const tuple = z4.tuple(p);
+    builder.positionals = <P extends [StandardSchemaV1, ...StandardSchemaV1[]]>(p: P) => {
       const descriptor: PositionalDescriptor<{
-        [K in keyof P]: z.output<P[K]>;
+        [K in keyof P]: StandardSchemaV1.InferOutput<P[K]>;
       }> = {
         [$type]: "positional",
-        raw: tuple,
+        raw: p,
       };
       return createCommandBuilderWith<TFlags, typeof descriptor, TSubcommands>({
         ...cfg,

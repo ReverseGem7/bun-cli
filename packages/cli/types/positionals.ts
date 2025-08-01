@@ -1,25 +1,26 @@
-import type z from "zod/v4/core";
 import type { $def, $type } from "../constants";
 import type { CommandShape, CommandBuilder } from "./command";
+import type { StandardSchemaV1 } from "../vendor/standar-schema-v1/spec";
 
 export type Positional = PositionalDescriptor<any>;
 
 export type PositionalDescriptor<T extends [any, ...any[]]> = {
-  raw: z.$ZodType;
+  raw: [StandardSchemaV1, ...StandardSchemaV1[]];
   [$def]?: T;
   [$type]: "positional";
 };
 
-export type ExtractPositionalsType<T> =
-  T extends PositionalDescriptor<infer U> ? U : undefined;
+export type ExtractPositionalsType<T> = T extends PositionalDescriptor<infer U>
+  ? U
+  : undefined;
 
 export type Positionals<C extends CommandShape> = {
-  positionals: <P extends [z.$ZodType, ...z.$ZodType[]]>(
+  positionals: <P extends [StandardSchemaV1, ...StandardSchemaV1[]]>(
     p: P
   ) => CommandBuilder<{
     flags: C["flags"];
     positionals: PositionalDescriptor<{
-      [K in keyof P]: z.output<P[K]>;
+      [K in keyof P]: StandardSchemaV1.InferOutput<P[K]>;
     }>;
     subcommands: C["subcommands"];
   }>;

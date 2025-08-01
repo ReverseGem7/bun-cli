@@ -3,7 +3,7 @@ import type { Flag, FlagMap, FlagsFn } from "./flags";
 import type { Positional, Positionals } from "./positionals";
 import type { RunFn, RunableCommand } from "./run";
 import type { SubCommand } from "./subcommand";
-import type { ConditionalIfUnset, DeepPartial, MaybeUnset } from "./util";
+import type { ConditionalIfUnset, MaybeUnset } from "./util";
 
 export type CommandShape<
   F = MaybeUnset<FlagMap<Flag>>,
@@ -14,8 +14,6 @@ export type CommandShape<
   positionals: P;
   subcommands: S;
 };
-
-type a = DeepPartial<CommandBuilder["run"]>;
 
 export type CommandBuilder<
   C extends CommandShape = {

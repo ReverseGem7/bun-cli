@@ -1,4 +1,3 @@
-import * as z from "zod/v4/core";
 import type { CommandShape, CommandTree } from "./types/command";
 import { $type } from "./constants";
 import type { FlagMap, Flag } from "./types/flags";
@@ -6,10 +5,49 @@ import type { Positional } from "./types/positionals";
 import type { RunableCommand } from "./types/run";
 import { parsePositionals, parseArgs } from "./parseArgs";
 import type { Caller } from "./types/caller";
+import { standardValidate } from "./types/util";
+import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
-export function parseCommandInput<
+async function parseRawFlags(
+  flags: FlagMap<Flag>,
+  rawFlags: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const entries = await Promise.all(
+    Object.entries(flags.raw).map(async ([key, schema]) => {
+      const value = rawFlags[key];
+
+      if (flags.multiple?.[key]) {
+        const values = Array.isArray(value) ? value : [value];
+        const parsedValues = await Promise.all(
+          values.map((v) => standardValidate(schema, v))
+        );
+        return [key, parsedValues];
+      } else {
+        const parsedValue = await standardValidate(schema, value);
+        return [key, parsedValue];
+      }
+    })
+  );
+
+  return Object.fromEntries(entries);
+}
+
+export async function parseRawPositionals(
+  schemas: [StandardSchemaV1, ...StandardSchemaV1[]],
+  values: unknown[]
+): Promise<unknown[]> {
+  if (values.length !== schemas.length) {
+    // TODO: Add error
+  }
+
+  return await Promise.all(
+    schemas.map((schema, i) => standardValidate(schema, values[i]))
+  );
+}
+
+export async function parseCommandInput<
   F extends FlagMap<Flag> | undefined,
-  P extends Positional | undefined,
+  P extends Positional | undefined
 >(
   raw: Omit<CommandShape<Record<string, any>, Array<unknown>>, "subcommands">,
   cmd: RunableCommand<{
@@ -21,11 +59,13 @@ export function parseCommandInput<
   let rawFlags = raw.flags ?? {};
 
   const parsedFlags =
-    cmd.flags && "raw" in cmd.flags ? z.parse(cmd.flags.raw, rawFlags) : {};
+    cmd.flags && "raw" in cmd.flags
+      ? await parseRawFlags(cmd.flags, rawFlags)
+      : {};
 
   const parsedPositionals =
     cmd.positionals && "raw" in cmd.positionals
-      ? z.parse(cmd.positionals.raw, raw.positionals ?? [])
+      ? await parseRawPositionals(cmd.positionals.raw, raw.positionals ?? [])
       : [];
 
   if (!cmd.runFn) throw new Error("No se definió función run");
@@ -85,24 +125,17 @@ export function caller<T extends CommandTree>(tree: T): Caller<T> {
       const cmd = node[key];
 
       if (isRunable(cmd)) {
-        const fn = (input?: any) => {
+        const fn = async (input?: any) => {
           const { flags, positionals } = input ?? {};
 
           if (!cmd.subcommands) {
-            return parseCommandInput({ flags, positionals }, cmd);
+            return await parseCommandInput({ flags, positionals }, cmd);
           }
 
           const sub = walk(cmd.subcommands);
 
-          const runResult = parseCommandInput({ flags, positionals }, cmd);
-          if (runResult instanceof Promise) {
-            return (async () => {
-              await runResult;
-              return sub;
-            })();
-          } else {
-            return sub;
-          }
+          await parseCommandInput({ flags, positionals }, cmd);
+          return sub;
         };
 
         if (cmd.subcommands) {
@@ -149,19 +182,11 @@ export async function create<T extends CommandTree>(tree: T): Promise<void> {
     };
   }
 
-  const fn = parseCommandInput(
+  await parseCommandInput(
     parseArgs(
       args.filter((_, i) => !cmd.commandPath.includes(i)),
       cmd.cmd
     ),
     cmd.cmd
   );
-
-  if (fn instanceof Promise) {
-    try {
-      await fn;
-    } catch {}
-  } else {
-    fn;
-  }
 }
