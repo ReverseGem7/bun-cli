@@ -31,7 +31,7 @@ yarn add clivex
 
 ## 🔧 Supported Validation Libraries
 
-Clivex supports any validation library that implements the Standard Schema specification. You can use any of these libraries with Clivex by simply importing and using their schema definitions.
+Clivex supports any validation library that implements the [Standard Schema specification](https://github.com/standard-schema/standard-schema). You can use any of these libraries with Clivex by simply importing and using their schema definitions.
 
 ## 🚀 Quick Start
 
