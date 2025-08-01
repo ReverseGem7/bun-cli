@@ -5,7 +5,7 @@ import type { Positional } from "./types/positionals";
 import type { RunableCommand } from "./types/run";
 import { parsePositionals, parseArgs } from "./parseArgs";
 import type { Caller } from "./types/caller";
-import { standardValidate } from "./types/util";
+import { standardValidate } from "./vendor/standar-schema-v1/parse";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
 async function parseRawFlags(
@@ -47,9 +47,12 @@ export async function parseRawPositionals(
 
 export async function parseCommandInput<
   F extends FlagMap<Flag> | undefined,
-  P extends Positional | undefined
+  P extends Positional | undefined,
 >(
-  raw: Omit<CommandShape<Record<string, any>, Array<unknown>>, "subcommands">,
+  raw: {
+    flags: any;
+    positionals: any;
+  },
   cmd: RunableCommand<{
     flags: F;
     positionals: P;

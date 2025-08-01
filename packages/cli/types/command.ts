@@ -1,33 +1,26 @@
-import type { $type, UnsetMarker } from "../constants";
-import type { Flag, FlagMap, FlagsFn } from "./flags";
-import type { Positional, Positionals } from "./positionals";
+import type { $type } from "../constants";
+import type { Flag, FlagMap, FlagFn } from "./flags";
+import type { Positional, PositionalFn } from "./positionals";
 import type { RunFn, RunableCommand } from "./run";
-import type { SubCommand } from "./subcommand";
-import type { ConditionalIfUnset, MaybeUnset } from "./util";
+import type { SubCommandsFn } from "./subcommand";
 
-export type CommandShape<
-  F = MaybeUnset<FlagMap<Flag>>,
-  P = MaybeUnset<Positional>,
-  S = MaybeUnset<CommandTree>
-> = {
-  flags: F;
-  positionals: P;
-  subcommands: S;
+export type CommandShape = {
+  flags?: FlagMap<Flag>;
+  positionals?: Positional;
+  subcommands?: CommandTree;
 };
-
-export type CommandBuilder<
-  C extends CommandShape = {
-    flags: UnsetMarker;
-    positionals: UnsetMarker;
-    subcommands: UnsetMarker;
-  }
-> = ConditionalIfUnset<C["flags"], FlagsFn<C>> &
-  ConditionalIfUnset<C["positionals"], Positionals<C>> &
-  ConditionalIfUnset<C["subcommands"], SubCommand<C>> &
-  RunFn<C> & {
-    [$type]: "CommandBuilder";
-  };
 
 export type CommandTree = {
   [key: string]: CommandTree | RunableCommand<any>;
 };
+
+export type CommandBuilder<
+  S extends CommandShape = {
+    flags: undefined;
+    positionals: undefined;
+    subcommands: undefined;
+  },
+> = (S["flags"] extends undefined ? FlagFn<S> : {}) &
+  (S["positionals"] extends undefined ? PositionalFn<S> : {}) &
+  (S["subcommands"] extends undefined ? SubCommandsFn<S> : {}) &
+  RunFn<S> & { [$type]: "CommandBuilder" };

@@ -1,102 +1,64 @@
-import type { CommandBuilder, CommandTree } from "./types/command";
-import { unset, $type } from "./constants";
-import type { FlagMap, Flag } from "./types/flags";
-import type { Positional, PositionalDescriptor } from "./types/positionals";
-import type { MaybeUnset, DeepPartial } from "./types/util";
+import type {
+  CommandBuilder,
+  CommandShape,
+  CommandTree,
+} from "./types/command";
+import { $type } from "./constants";
+import type { Flag } from "./types/flags";
+import type { DeepPartial } from "./types/util";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
-export function createCommand(): CommandBuilder {
-  return createCommandBuilderWith({
-    flags: unset,
-    positionals: unset,
-    subcommands: unset,
-  });
-}
-
-function createCommandBuilderWith<
-  TFlags extends MaybeUnset<FlagMap<Flag>>,
-  TPositionals extends MaybeUnset<Positional>,
-  TSubcommands extends MaybeUnset<CommandTree>
->(cfg: {
-  flags: TFlags;
-  positionals: TPositionals;
-  subcommands: TSubcommands;
-}): CommandBuilder<{
-  flags: TFlags;
-  positionals: TPositionals;
-  subcommands: TSubcommands;
-}> {
-  const builder: DeepPartial<CommandBuilder> = {};
-
-  if (cfg.flags === unset) {
-    builder.flags = <T extends Flag>(f: T) => {
-      const shortToLong = Object.fromEntries(
-        Object.entries(f)
-          .filter(([, v]) => "config" in v && v.config?.short)
-          .map(([long, v]) => [v.config?.short, long])
-      );
-
-      const multiple = Object.fromEntries(
-        Object.entries(f)
-          .filter(([, v]) => "config" in v && v.config?.multiple)
-          .map(([k, v]) => [k, v.config?.multiple])
-      );
-
-      const shape = Object.fromEntries(
-        Object.entries(f).map(([k, v]) => [k, v.raw])
-      );
-
-      const flagMap: FlagMap<T> = {
-        [$type]: "flags",
-        raw: shape,
-        shortToLong,
-        multiple,
-      };
-
-      return createCommandBuilderWith<FlagMap<T>, TPositionals, TSubcommands>({
+export function createCommand(cfg: CommandShape = {}): CommandBuilder {
+  const builder: DeepPartial<CommandBuilder> = {
+    run(fn: (...args: any[]) => any) {
+      return {
         ...cfg,
-        flags: flagMap,
-      });
-    };
-  }
-
-  if (cfg.positionals === unset) {
-    builder.positionals = <P extends [StandardSchemaV1, ...StandardSchemaV1[]]>(p: P) => {
-      const descriptor: PositionalDescriptor<{
-        [K in keyof P]: StandardSchemaV1.InferOutput<P[K]>;
-      }> = {
-        [$type]: "positional",
-        raw: p,
+        runFn: fn,
+        [$type]: "runable",
       };
-      return createCommandBuilderWith<TFlags, typeof descriptor, TSubcommands>({
-        ...cfg,
-        positionals: descriptor,
-      });
-    };
-  }
+    },
 
-  builder.subcommands = (subcommands: TSubcommands) => {
-    return createCommandBuilderWith<TFlags, TPositionals, typeof subcommands>({
-      ...cfg,
-      subcommands: subcommands,
-    });
+    [$type]: "CommandBuilder",
   };
 
-  builder.run = (fn: (ctx: any) => any) => {
-    return {
-      [$type]: "runable",
-      flags: cfg.flags === unset ? undefined : cfg.flags,
-      positionals: cfg.positionals === unset ? undefined : cfg.positionals,
-      subcommands: cfg.subcommands === unset ? undefined : cfg.subcommands,
-      runFn: fn,
-    };
-  };
+  if (!cfg.subcommands) {
+    builder.subcommands = (subcommands: CommandTree) =>
+      createCommand({ ...cfg, subcommands });
+  }
 
-  builder[$type] = "CommandBuilder";
+  if (!cfg.flags) {
+    builder.flags = (f: Flag) =>
+      createCommand({
+        ...cfg,
+        flags: {
+          [$type]: "flags",
+          raw: Object.fromEntries(
+            Object.entries(f).map(([k, v]) => [k, v.raw])
+          ),
+          shortToLong: Object.fromEntries(
+            Object.entries(f)
+              .filter(([, v]) => v.config?.short)
+              .map(([k, v]) => [v.config!.short!, k])
+          ),
+          multiple: Object.fromEntries(
+            Object.entries(f)
+              .filter(([, v]) => v.config?.multiple)
+              .map(([k, v]) => [k, v.config!.multiple!])
+          ),
+        },
+      });
+  }
 
-  return builder as CommandBuilder<{
-    flags: TFlags;
-    positionals: TPositionals;
-    subcommands: TSubcommands;
-  }>;
+  if (!cfg.positionals) {
+    builder.positionals = (p: [StandardSchemaV1, ...StandardSchemaV1[]]) =>
+      createCommand({
+        ...cfg,
+        positionals: {
+          [$type]: "positional",
+          raw: p,
+        },
+      });
+  }
+
+  return builder as CommandBuilder;
 }

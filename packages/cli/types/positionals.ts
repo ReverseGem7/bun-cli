@@ -10,18 +10,17 @@ export type PositionalDescriptor<T extends [any, ...any[]]> = {
   [$type]: "positional";
 };
 
-export type ExtractPositionalsType<T> = T extends PositionalDescriptor<infer U>
-  ? U
-  : undefined;
+export type ExtractPositionalsType<T> =
+  T extends PositionalDescriptor<infer U> ? U : undefined;
 
-export type Positionals<C extends CommandShape> = {
+export type PositionalFn<S extends CommandShape> = {
   positionals: <P extends [StandardSchemaV1, ...StandardSchemaV1[]]>(
-    p: P
+    def: P
   ) => CommandBuilder<{
-    flags: C["flags"];
+    flags: S["flags"];
     positionals: PositionalDescriptor<{
       [K in keyof P]: StandardSchemaV1.InferOutput<P[K]>;
     }>;
-    subcommands: C["subcommands"];
+    subcommands: S["subcommands"];
   }>;
 };

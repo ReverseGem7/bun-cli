@@ -1,11 +1,12 @@
 import { $type } from "./constants";
 import type { Options, FlagDescriptor } from "./types/flags";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
+import { ERROR } from "./constants";
 
 export function createFlag() {
   function makeFlagDescriptor<
     T extends { type: StandardSchemaV1.InferOutput<R>; options?: Options },
-    R extends StandardSchemaV1 = StandardSchemaV1
+    R extends StandardSchemaV1 = StandardSchemaV1,
   >(raw: R, config?: T["options"]): FlagDescriptor<T> {
     return {
       config,
@@ -22,6 +23,9 @@ export function createFlag() {
 
   return {
     input<T extends StandardSchemaV1>(schema: T) {
+      if (!schema || !("~standard" in schema))
+        throw new Error(ERROR.INVALID_SCHEMA);
+
       return makeFlagDescriptor<{
         type: StandardSchemaV1.InferOutput<T>;
         options: undefined;
@@ -33,6 +37,8 @@ export function createFlag() {
 export function createPositional() {
   return {
     input<T extends StandardSchemaV1>(schema: T) {
+      if (!schema || !("~standard" in schema))
+        throw new Error(ERROR.INVALID_SCHEMA);
       return schema;
     },
   };
