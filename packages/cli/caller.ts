@@ -1,4 +1,4 @@
-import type { CommandShape, CommandTree } from "./types/command";
+import type { CommandTree } from "./types/command";
 import { $type } from "./constants";
 import type { FlagMap, Flag } from "./types/flags";
 import type { Positional } from "./types/positionals";
