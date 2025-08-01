@@ -303,10 +303,10 @@ bun test
 - [x] Multiple arguments support
 - [x] Positional arguments
 - [x] Subcommands
+- [x] Additional schema validators
 - [ ] Strict mode
 - [ ] Command aliases
 - [ ] Global flags and positionals
-- [ ] Additional schema validators
 - [ ] Terminal completions
 - [ ] Built-in help command
 - [ ] Comprehensive test suite
