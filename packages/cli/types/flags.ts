@@ -5,7 +5,11 @@ import type { StandardSchemaV1 } from "../vendor/standar-schema-v1/spec";
 
 type ShortFlag = Alpha | Lowercase<Alpha>;
 
-export type Options = { short?: ShortFlag; multiple?: boolean };
+export type Options = {
+  short?: ShortFlag;
+  multiple?: boolean;
+  description?: string;
+};
 export type Flag = Record<string, FlagDescriptor>;
 
 export type FlagDescriptor<
@@ -29,6 +33,7 @@ export type FlagMap<
   raw: Record<string, StandardSchemaV1>;
   shortToLong: Record<string, string>;
   multiple: Record<string, boolean | undefined>;
+  meta: Record<string, string>;
   [$def]?: T;
   [$type]: "flags";
 };

@@ -5,8 +5,8 @@ import type { Positional } from "./types/positionals";
 import type { RunableCommand } from "./types/run";
 import { parsePositionals, parseArgs } from "./parseArgs";
 import type { Caller } from "./types/caller";
-import { standardValidate } from "./vendor/standar-schema-v1/parse";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
+import { standardValidate } from "./vendor/standar-schema-v1/parse";
 
 async function parseRawFlags(
   flags: FlagMap<Flag>,
@@ -19,11 +19,21 @@ async function parseRawFlags(
       if (flags.multiple?.[key]) {
         const values = Array.isArray(value) ? value : [value];
         const parsedValues = await Promise.all(
-          values.map((v) => standardValidate(schema, v))
+          values.map((v) =>
+            standardValidate(schema, v, {
+              kind: "flag",
+              keyOrIndex: key,
+              description: flags.meta[key],
+            })
+          )
         );
         return [key, parsedValues];
       } else {
-        const parsedValue = await standardValidate(schema, value);
+        const parsedValue = await standardValidate(schema, value, {
+          kind: "flag",
+          keyOrIndex: key,
+          description: flags.meta[key],
+        });
         return [key, parsedValue];
       }
     })
@@ -41,7 +51,13 @@ export async function parseRawPositionals(
   }
 
   return await Promise.all(
-    schemas.map((schema, i) => standardValidate(schema, values[i]))
+    schemas.map((schema, i) =>
+      standardValidate(schema, values[i], {
+        kind: "positional",
+        keyOrIndex: i,
+        // add description
+      })
+    )
   );
 }
 

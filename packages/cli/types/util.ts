@@ -9,6 +9,12 @@ export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+const _errorSymbol = Symbol();
+export type ErrorSymbol = typeof _errorSymbol;
+export type TypeError<TMessage extends string> = TMessage & {
+  _: typeof _errorSymbol;
+};
+
 export type Alpha =
   | "A"
   | "B"

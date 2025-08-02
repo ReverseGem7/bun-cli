@@ -28,7 +28,6 @@ export function createFlag() {
 
       return makeFlagDescriptor<{
         type: StandardSchemaV1.InferOutput<T>;
-        options: undefined;
       }>(schema);
     },
   };

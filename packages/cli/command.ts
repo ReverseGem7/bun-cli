@@ -35,6 +35,11 @@ export function createCommand(cfg: CommandShape = {}): CommandBuilder {
           raw: Object.fromEntries(
             Object.entries(f).map(([k, v]) => [k, v.raw])
           ),
+          meta: Object.fromEntries(
+            Object.entries(f)
+              .filter(([, v]) => v.config?.description)
+              .map(([k, v]) => [k, v.config!.description!])
+          ),
           shortToLong: Object.fromEntries(
             Object.entries(f)
               .filter(([, v]) => v.config?.short)
