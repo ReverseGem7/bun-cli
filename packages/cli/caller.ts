@@ -1,211 +1,253 @@
-import type { CommandTree } from "./types/command";
-import { $type } from "./constants";
-import type { FlagMap, Flag } from "./types/flags";
+import { $type, ERROR } from "./constants";
+import { parseArgs, parsePositionals } from "./parseArgs";
+import type { Caller } from "./types/caller";
+import type { CommandNode } from "./types/command";
+import type { Flag, FlagMap } from "./types/flags";
 import type { Positional } from "./types/positionals";
 import type { RunableCommand } from "./types/run";
-import { parsePositionals, parseArgs } from "./parseArgs";
-import type { Caller } from "./types/caller";
-import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
+import type { ErrorFormatterFn } from "./types/util";
 import { standardValidate } from "./vendor/standar-schema-v1/parse";
+import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
 async function parseRawFlags(
-  flags: FlagMap<Flag>,
-  rawFlags: Record<string, unknown>
+	flags: FlagMap<Flag>,
+	rawFlags: Record<string, unknown>,
+	errorFormatter?: ErrorFormatterFn,
 ): Promise<Record<string, unknown>> {
-  const entries = await Promise.all(
-    Object.entries(flags.raw).map(async ([key, schema]) => {
-      const value = rawFlags[key];
+	const entries = await Promise.all(
+		Object.entries(flags.raw).map(async ([key, schema]) => {
+			const value = rawFlags[key];
 
-      if (flags.multiple?.[key]) {
-        const values = Array.isArray(value) ? value : [value];
-        const parsedValues = await Promise.all(
-          values.map((v) =>
-            standardValidate(schema, v, {
-              kind: "flag",
-              keyOrIndex: key,
-              description: flags.meta[key],
-            })
-          )
-        );
-        return [key, parsedValues];
-      } else {
-        const parsedValue = await standardValidate(schema, value, {
-          kind: "flag",
-          keyOrIndex: key,
-          description: flags.meta[key],
-        });
-        return [key, parsedValue];
-      }
-    })
-  );
+			if (flags.multiple?.[key]) {
+				const values = Array.isArray(value) ? value : [value];
+				const parsedValues = await Promise.all(
+					values.map((v) =>
+						standardValidate(
+							schema,
+							v,
+							{
+								kind: "flag",
+								keyOrIndex: key,
+								description: flags.meta[key],
+							},
+							errorFormatter,
+						),
+					),
+				);
+				return [key, parsedValues];
+			} else {
+				const parsedValue = await standardValidate(
+					schema,
+					value,
+					{
+						kind: "flag",
+						keyOrIndex: key,
+						description: flags.meta[key],
+					},
+					errorFormatter,
+				);
+				return [key, parsedValue];
+			}
+		}),
+	);
 
-  return Object.fromEntries(entries);
+	return Object.fromEntries(entries);
 }
 
 export async function parseRawPositionals(
-  schemas: [StandardSchemaV1, ...StandardSchemaV1[]],
-  values: unknown[]
+	schemas: [StandardSchemaV1, ...StandardSchemaV1[]],
+	values: unknown[],
+	errorFormatter?: ErrorFormatterFn,
 ): Promise<unknown[]> {
-  if (values.length !== schemas.length) {
-    // TODO: Add error
-  }
+	if (values.length !== schemas.length) {
+		const error = new Error(ERROR.INVALID_POSITIONAL_COUNT);
+		if (errorFormatter) {
+			errorFormatter({
+				kind: "positional",
+				keyOrIndex: values.length,
+				description: `Expected ${schemas.length} positional arguments, but got ${values.length}`,
+			});
+		}
+		throw error;
+	}
 
-  return await Promise.all(
-    schemas.map((schema, i) =>
-      standardValidate(schema, values[i], {
-        kind: "positional",
-        keyOrIndex: i,
-        // add description
-      })
-    )
-  );
+	return await Promise.all(
+		schemas.map((schema, i) =>
+			standardValidate(
+				schema,
+				values[i],
+				{
+					kind: "positional",
+					keyOrIndex: i,
+					description: `Positional argument ${i + 1}`,
+				},
+				errorFormatter,
+			),
+		),
+	);
 }
 
 export async function parseCommandInput<
-  F extends FlagMap<Flag> | undefined,
-  P extends Positional | undefined,
+	F extends FlagMap<Flag> | undefined,
+	P extends Positional | undefined,
 >(
-  raw: {
-    flags: any;
-    positionals: any;
-  },
-  cmd: RunableCommand<{
-    flags: F;
-    positionals: P;
-    output: void | Promise<void>;
-  }>
+	raw: {
+		flags: any;
+		positionals: any;
+	},
+	cmd: RunableCommand<{
+		flags: F;
+		positionals: P;
+		output: void | Promise<void>;
+	}>,
+	errorFormatter?: ErrorFormatterFn,
 ) {
-  let rawFlags = raw.flags ?? {};
+	const rawFlags = raw.flags ?? {};
 
-  const parsedFlags =
-    cmd.flags && "raw" in cmd.flags
-      ? await parseRawFlags(cmd.flags, rawFlags)
-      : {};
+	const parsedFlags =
+		cmd.flags && "raw" in cmd.flags
+			? await parseRawFlags(cmd.flags, rawFlags, errorFormatter)
+			: {};
 
-  const parsedPositionals =
-    cmd.positionals && "raw" in cmd.positionals
-      ? await parseRawPositionals(cmd.positionals.raw, raw.positionals ?? [])
-      : [];
+	const parsedPositionals =
+		cmd.positionals && "raw" in cmd.positionals
+			? await parseRawPositionals(
+				cmd.positionals.raw,
+				raw.positionals ?? [],
+				errorFormatter,
+			)
+			: [];
 
-  if (!cmd.runFn) throw new Error("No se definió función run");
+	if (!cmd.runFn) throw new Error(ERROR.NO_RUN_FUNCTION);
 
-  return cmd.runFn({
-    flags: parsedFlags as any,
-    positionals: parsedPositionals as any,
-  });
+	return cmd.runFn({
+		flags: parsedFlags as any,
+		positionals: parsedPositionals as any,
+	});
 }
 
-function isRunable(cmd: CommandTree | RunableCommand): cmd is RunableCommand {
-  return $type in cmd && (cmd as any)[$type] === "runable";
+function isRunable(cmd: CommandNode | RunableCommand): cmd is RunableCommand {
+	return $type in cmd && (cmd as any)[$type] === "runable";
 }
 
 function getCommands(
-  tree: CommandTree | RunableCommand,
-  positionals: string[],
-  positionalIndexesInArgs: number[]
+	tree: CommandNode | RunableCommand,
+	positionals: string[],
+	positionalIndexesInArgs: number[],
 ) {
-  const steps = positionals.map((key, i) => ({ key, i }));
-  let current: CommandTree | RunableCommand = tree;
-  let path: number[] = [];
-  let used = new Set<number>();
-  let history: { cmd: RunableCommand; path: number[]; used: Set<number> }[] =
-    [];
+	const steps = positionals.map((key, i) => ({ key, i }));
+	let current: CommandNode | RunableCommand = tree;
+	let path: number[] = [];
+	const used = new Set<number>();
+	const history: { cmd: RunableCommand; path: number[]; used: Set<number> }[] =
+		[];
 
-  for (const { key, i } of steps) {
-    used.add(i);
+	for (const { key, i } of steps) {
+		used.add(i);
 
-    if (!(key in current)) break;
+		if (!(key in current)) break;
 
-    current = (current as CommandTree)[key]!;
-    path = [...path, positionalIndexesInArgs[i]!]; // cambia aquí
+		current = (current as CommandNode)[key]!;
+		path = [...path, positionalIndexesInArgs[i]!];
 
-    if (isRunable(current)) {
-      history.push({ cmd: current, path, used: new Set(used) });
-    }
-  }
+		if (isRunable(current)) {
+			history.push({ cmd: current, path, used: new Set(used) });
+		}
+	}
 
-  const last = history.at(-1);
-  if (!last) return null;
+	const last = history.at(-1);
+	if (!last) return null;
 
-  const usedPositionals = positionals.filter((_, i) => last.used.has(i));
+	const usedPositionals = positionals.filter((_, i) => last.used.has(i));
 
-  return {
-    cmd: last.cmd,
-    commandPath: last.path,
-    usedPositionals,
-  };
+	return {
+		cmd: last.cmd,
+		commandPath: last.path,
+		usedPositionals,
+	};
 }
 
-export function caller<T extends CommandTree>(tree: T): Caller<T> {
-  const walk = (node: any): any => {
-    const out: any = {};
+export function caller<T extends CommandNode>(
+	tree: T,
+	errorFormatter?: ErrorFormatterFn,
+): Caller<T> {
+	const walk = (node: any): any => {
+		const out: any = {};
 
-    for (const key in node) {
-      const cmd = node[key];
+		for (const key in node) {
+			const cmd = node[key];
 
-      if (isRunable(cmd)) {
-        const fn = async (input?: any) => {
-          const { flags, positionals } = input ?? {};
+			if (isRunable(cmd)) {
+				const fn = async (input?: any) => {
+					const { flags, positionals } = input ?? {};
 
-          if (!cmd.subcommands) {
-            return await parseCommandInput({ flags, positionals }, cmd);
-          }
+					if (!cmd.subcommands) {
+						return await parseCommandInput(
+							{ flags, positionals },
+							cmd,
+							errorFormatter,
+						);
+					}
 
-          const sub = walk(cmd.subcommands);
+					const sub = walk(cmd.subcommands);
 
-          await parseCommandInput({ flags, positionals }, cmd);
-          return sub;
-        };
+					await parseCommandInput({ flags, positionals }, cmd, errorFormatter);
+					return sub;
+				};
 
-        if (cmd.subcommands) {
-          Object.assign(fn, walk(cmd.subcommands));
-        }
+				if (cmd.subcommands) {
+					Object.assign(fn, walk(cmd.subcommands));
+				}
 
-        out[key] = fn;
-      } else if (typeof cmd === "object") {
-        out[key] = walk(cmd);
-      }
-    }
+				out[key] = fn;
+			} else if (typeof cmd === "object") {
+				out[key] = walk(cmd);
+			}
+		}
 
-    return out;
-  };
+		return out;
+	};
 
-  return walk(tree) as Caller<T>;
+	return walk(tree) as Caller<T>;
 }
 
-export async function create<T extends CommandTree>(tree: T): Promise<void> {
-  const args = process.argv.slice(2);
-  const { positionals, positionalIndexesInArgs } = parsePositionals(args);
+export async function create<T extends CommandNode>(
+	tree: T,
+	errorFormatter?: ErrorFormatterFn,
+): Promise<void> {
+	const args = process.argv.slice(2);
+	const { positionals, positionalIndexesInArgs } = parsePositionals(args);
 
-  let cmd = getCommands(tree, positionals, positionalIndexesInArgs);
+	let cmd = getCommands(tree, positionals, positionalIndexesInArgs);
 
-  if (cmd === null) throw Error("No command found");
+	if (cmd === null) throw new Error(ERROR.NO_COMMAND_FOUND);
 
-  while (
-    isRunable(cmd.cmd) &&
-    positionals.length > cmd.usedPositionals.length &&
-    cmd.cmd.subcommands
-  ) {
-    const next = getCommands(
-      cmd.cmd.subcommands,
-      cmd.usedPositionals,
-      positionalIndexesInArgs
-    );
+	while (
+		isRunable(cmd.cmd) &&
+		positionals.length > cmd.usedPositionals.length &&
+		cmd.cmd.subcommands
+	) {
+		const next = getCommands(
+			cmd.cmd.subcommands,
+			cmd.usedPositionals,
+			positionalIndexesInArgs,
+		);
 
-    if (next === null) break;
+		if (next === null) break;
 
-    cmd = {
-      cmd: next.cmd,
-      commandPath: [...cmd.commandPath, ...next.commandPath],
-      usedPositionals: next.usedPositionals,
-    };
-  }
+		cmd = {
+			cmd: next.cmd,
+			commandPath: [...cmd.commandPath, ...next.commandPath],
+			usedPositionals: next.usedPositionals,
+		};
+	}
 
-  await parseCommandInput(
-    parseArgs(
-      args.filter((_, i) => !cmd.commandPath.includes(i)),
-      cmd.cmd
-    ),
-    cmd.cmd
-  );
+	await parseCommandInput(
+		parseArgs(
+			args.filter((_, i) => !cmd.commandPath.includes(i)),
+			cmd.cmd,
+		),
+		cmd.cmd,
+		errorFormatter,
+	);
 }

@@ -1,1 +1,1 @@
-export { CLI } from "./cli";
+export { initCLI } from "./cli";

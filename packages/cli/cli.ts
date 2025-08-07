@@ -1,23 +1,25 @@
-import type { Caller } from "./types/caller";
+import { createFlag, createPositional } from "./args";
+import { caller, create } from "./caller";
 import { createCommand } from "./command";
 import type { CommandTree } from "./types/command";
-import { createPositional, createFlag } from "./args";
-import { caller, create } from "./caller";
+import type { ErrorFormatterFn } from "./types/util";
 
-export class CLI {
-  flag = createFlag();
-  positional = createPositional();
-  command = createCommand();
-
-  commands<T extends CommandTree>(tree: T): T {
-    return tree;
-  }
-
-  caller<T extends CommandTree>(tree: T): Caller<T> {
-    return caller(tree);
-  }
-
-  create<T extends CommandTree>(tree: T): Promise<void> {
-    return create(tree);
-  }
+class CLIBuilder {
+	create({
+		errorFormater
+	}: {
+		errorFormater?: ErrorFormatterFn
+	} = {}) {
+		return {
+			flag: createFlag(),
+			positional: createPositional(),
+			command: createCommand(),
+			caller: (tree: any) => caller(tree, errorFormater),
+			create: (tree: any) => create(tree, errorFormater),
+			commands: <T extends CommandTree>(tree: T): T => tree
+		}
+	}
 }
+
+const initCLI = new CLIBuilder
+export { initCLI }
