@@ -39,9 +39,9 @@ Here's a simple example to get you started:
 
 ```typescript
 import * as z from "zod"; // or any Standard Schema library
-import { CLI } from "clivex";
+import { initCLI } from "clivex";
 
-const { flag, positional, command, commands, create } = new CLI();
+const { flag, positional, command, commands, create } = initCLI.create();
 
 const cli = commands({
   greet: command
@@ -80,9 +80,9 @@ bun run index.ts greet --formal John
 
 ```typescript
 import * as z from "zod"; // or any Standard Schema library
-import { CLI } from "clivex";
+import { initCLI } from "clivex";
 
-const { flag, positional, command, commands, create } = new CLI();
+const { flag, positional, command, commands, create } = initCLI.create();
 
 const cli = commands({
   calculator: command
@@ -132,9 +132,9 @@ create(cli);
 
 ```typescript
 import * as z from "zod"; // or any Standard Schema library
-import { CLI } from "clivex";
+import { initCLI } from "clivex";
 
-const { flag, positional, command, commands, create } = new CLI();
+const { flag, positional, command, commands, create } = initCLI.create();
 
 const cli = commands({
   project: {
@@ -190,16 +190,39 @@ const cli = commands({
 create(cli);
 ```
 
+### CLI with Custom Error Formatter
+
+```typescript
+import * as z from "zod";
+import { initCLI } from "clivex";
+
+const errorFormatter = (args: {
+  kind: "flag" | "positional";
+  keyOrIndex: string | number;
+  description?: string;
+}) => {
+  console.log(`Error formatter called with:`, args);
+};
+
+const { flag, positional, command, commands, create } = initCLI.create({ 
+  errorFormater: errorFormatter 
+});
+
+// ... rest of CLI definition
+```
+
 ## 🛠️ API Reference
 
-### CLI Class
+### CLI Initialization
 
 The main entry point for creating CLI applications.
 
 ```typescript
-import { CLI } from "clivex";
+import { initCLI } from "clivex";
 
-const cli = new CLI();
+const { flag, positional, command, commands, create } = initCLI.create({
+  errorFormater?: ErrorFormatterFn
+});
 ```
 
 ### Command Builder

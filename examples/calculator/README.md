@@ -64,3 +64,43 @@ bun run index.ts calculator 6 7 -o multiply -v
 # Divide (will show error for division by zero)
 bun run index.ts calculator 10 0 --operation divide
 ```
+
+## Code Structure
+
+The example uses the new Clivex API:
+
+```typescript
+import * as z from "zod/v4";
+import { initCLI } from "../../packages/cli";
+
+const { flag, positional, command, commands, create } = initCLI.create();
+
+const cli = commands({
+  calculator: command
+    .flags({
+      operation: flag
+        .input(z.enum(["add", "subtract", "multiply", "divide"]))
+        .options({
+          short: "o",
+        }),
+      verbose: flag.input(z.optional(z.boolean())).options({
+        short: "v",
+      }),
+    })
+    .positionals([positional.input(z.number()), positional.input(z.number())])
+    .run(({ flags, positionals }) => {
+      // Implementation here...
+    }),
+});
+
+create(cli);
+```
+
+## Key Features Demonstrated
+
+- **Type-safe flags**: Using Zod enums for operation validation
+- **Optional flags**: The verbose flag is optional and defaults to false
+- **Positional arguments**: Two required number arguments
+- **Short flags**: `-o` for operation, `-v` for verbose
+- **Error handling**: Division by zero throws an error
+- **Conditional output**: Verbose mode shows the full calculation
