@@ -1,15 +1,7 @@
+import { initCLI } from "clivex";
 import * as z from "zod/v4";
-import { initCLI } from "../../packages/cli";
 
-const errorFormatter = (args: {
-	kind: "flag" | "positional";
-	keyOrIndex: string | number;
-	description?: string;
-}) => {
-	console.log(`Error formatter called with:`, args);
-};
-
-const { flag, positional, command, commands, create } = initCLI.create({ errorFormater: errorFormatter });
+const { flag, positional, command, commands, create } = initCLI.create();
 
 const cli = commands({
 	calculator: command
