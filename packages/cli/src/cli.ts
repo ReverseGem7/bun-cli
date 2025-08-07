@@ -14,8 +14,8 @@ class CLIBuilder {
 			flag: createFlag(),
 			positional: createPositional(),
 			command: createCommand(),
-			caller: (tree: any) => caller(tree, errorFormater),
-			create: (tree: any) => create(tree, errorFormater),
+			caller: (tree: CommandTree) => caller(tree, errorFormater),
+			create: (tree: CommandTree) => create(tree, errorFormater),
 			commands: <T extends CommandTree>(tree: T): T => tree
 		}
 	}
