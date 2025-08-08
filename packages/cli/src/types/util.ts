@@ -1,8 +1,8 @@
 export type Prettify<T> = { [K in keyof T]: T[K] } & {};
 export type DeepPartial<TObject> = TObject extends object
 	? {
-		[P in keyof TObject]?: DeepPartial<TObject[P]>;
-	}
+			[P in keyof TObject]?: DeepPartial<TObject[P]>;
+		}
 	: TObject;
 
 export type Mutable<T> = {

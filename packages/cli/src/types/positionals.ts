@@ -3,7 +3,7 @@ import type { StandardSchemaV1 } from "../vendor/standar-schema-v1/spec";
 import type { CommandBuilder, CommandShape } from "./command";
 
 export type Positional = PositionalDescriptor<any>;
-export type PositionalInput = [StandardSchemaV1, ...StandardSchemaV1[]]
+export type PositionalInput = [StandardSchemaV1, ...StandardSchemaV1[]];
 
 export type PositionalDescriptor<T extends [any, ...any[]]> = {
 	raw: PositionalInput;

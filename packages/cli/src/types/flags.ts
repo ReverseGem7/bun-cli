@@ -47,6 +47,13 @@ export type ExtractFlagsType<T> = T extends FlagMap<infer U>
 	: undefined;
 
 export type FlagFn<S extends CommandShape> = {
+	/**
+	 * Defines the flags for a command.
+	 *
+	 * @template F - The type of the flag definitions.
+	 * @param def - An object mapping flag names to their descriptors.
+	 * @returns A new CommandBuilder with the provided flags.
+	 */
 	flags: <F extends Record<string, FlagDescriptor>>(
 		def: F,
 	) => CommandBuilder<{

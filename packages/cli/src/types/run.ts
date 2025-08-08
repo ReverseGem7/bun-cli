@@ -5,11 +5,11 @@ import type { ExtractPositionalsType, Positional } from "./positionals";
 
 export type ParamsOrUndefined<F, P> = F extends undefined
 	? P extends undefined
-	? undefined
-	: { positionals: P }
+		? undefined
+		: { positionals: P }
 	: P extends undefined
-	? { flags: F }
-	: { flags: F; positionals: P };
+		? { flags: F }
+		: { flags: F; positionals: P };
 
 export type RunableCommand<
 	T extends {

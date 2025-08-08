@@ -2,6 +2,10 @@ import { $type, ERROR } from "./constants";
 import type { FlagDescriptor, Options } from "./types/flags";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
+/**
+ * Creates a flag builder for defining CLI flags with schema validation and options.
+ * @returns {Object} An object with an input method for flag schema definition.
+ */
 export function createFlag() {
 	function makeFlagDescriptor<
 		T extends { type: StandardSchemaV1.InferOutput<R>; options?: Options },
@@ -32,6 +36,10 @@ export function createFlag() {
 	};
 }
 
+/**
+ * Creates a positional argument builder for defining CLI positionals with schema validation.
+ * @returns {Object} An object with an input method for positional schema definition.
+ */
 export function createPositional() {
 	return {
 		input<T extends StandardSchemaV1>(schema: T) {

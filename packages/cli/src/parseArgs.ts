@@ -1,17 +1,32 @@
 import { ERROR } from "./constants";
 import type { RunableCommand } from "./types/run";
 
+/**
+ * Converts a kebab-case string to camelCase.
+ * @param {string} str - The string to convert.
+ * @returns {string} The camelCase version of the string.
+ */
 const toCamelCase = (str: string): string => {
 	return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
+/**
+ * Attempts to parse a string as JSON. Returns undefined if parsing fails.
+ * @param {string} value - The string to parse.
+ * @returns {any} The parsed value or undefined.
+ */
 const tryParseJson = (value: string): any => {
 	try {
 		return JSON.parse(value);
-	} catch { }
+	} catch {}
 	return undefined;
 };
 
+/**
+ * Parses a value, attempting JSON parsing and handling comma-separated lists.
+ * @param {string} value - The value to parse.
+ * @returns {any} The parsed value.
+ */
 const parseValue = (value: string): any => {
 	const jsonParsed = tryParseJson(value);
 	if (jsonParsed !== undefined) return jsonParsed;
@@ -23,6 +38,12 @@ const parseValue = (value: string): any => {
 	return value;
 };
 
+/**
+ * Sets a deeply nested property on an object, creating intermediate objects as needed.
+ * @param {Record<string, any>} target - The target object.
+ * @param {string[]} path - The path to set.
+ * @param {any} value - The value to set.
+ */
 export function setDeep(
 	target: Record<string, any>,
 	path: string[],
@@ -39,6 +60,9 @@ export function setDeep(
 	obj[path.at(-1)!] = value;
 }
 
+/**
+ * Represents a parsed flag from the CLI arguments.
+ */
 export type ParsedFlag = {
 	name: string;
 	value: any;
@@ -50,6 +74,12 @@ type ParsedArgs = {
 	positionals: any[];
 };
 
+/**
+ * Strips the prefix from a flag argument.
+ * @param {string} arg - The argument string.
+ * @param {boolean} isLong - Whether the flag is long (--flag) or short (-f).
+ * @returns {string} The argument without the prefix.
+ */
 function stripPrefix(arg: string, isLong: boolean) {
 	if (isLong) {
 		return arg.slice(2);
@@ -57,6 +87,12 @@ function stripPrefix(arg: string, isLong: boolean) {
 	return arg.slice(1);
 }
 
+/**
+ * Retrieves a deeply nested property from an object.
+ * @param {any} obj - The object to query.
+ * @param {string[]} path - The path to the property.
+ * @returns {any} The value at the path, or undefined.
+ */
 function getDeep(obj: any, path: string[]): any {
 	return path.reduce((acc, key) => {
 		if (acc && typeof acc === "object") {
@@ -66,6 +102,12 @@ function getDeep(obj: any, path: string[]): any {
 	}, obj);
 }
 
+/**
+ * Adds a flag value to the flags object, supporting dot notation for nested keys.
+ * @param {string} key - The flag key (dot notation supported).
+ * @param {unknown} value - The value to set.
+ * @param {Record<string, unknown>} flags - The flags object to update.
+ */
 function addFlag(key: string, value: unknown, flags: Record<string, unknown>) {
 	const path = key.split(".");
 
@@ -76,6 +118,11 @@ function addFlag(key: string, value: unknown, flags: Record<string, unknown>) {
 	setDeep(flags, path, newValue);
 }
 
+/**
+ * Parses positional arguments from the CLI args array.
+ * @param {string[]} args - The CLI arguments.
+ * @returns {{ positionals: string[], positionalIndexesInArgs: number[] }} The parsed positionals and their indexes.
+ */
 export function parsePositionals(args: string[]) {
 	const positionals: string[] = [];
 	const positionalIndexesInArgs: number[] = [];
@@ -91,6 +138,12 @@ export function parsePositionals(args: string[]) {
 	return { positionals, positionalIndexesInArgs };
 }
 
+/**
+ * Parses CLI arguments into flags and positionals according to the command definition.
+ * @param {string[]} args - The CLI arguments.
+ * @param {RunableCommand} cmd - The command definition.
+ * @returns {ParsedArgs} The parsed flags and positionals.
+ */
 export function parseArgs(args: string[], cmd: RunableCommand): ParsedArgs {
 	const flags: Record<string, ParsedFlag> = {};
 	const positionals: any[] = [];

@@ -8,6 +8,10 @@ import type { Flag } from "./types/flags";
 import type { PositionalInput } from "./types/positionals";
 import type { DeepPartial } from "./types/util";
 
+/**
+ * Creates a command builder for defining CLI commands, flags, and positionals.
+ * @returns {CommandBuilder} The command builder instance.
+ */
 export function createCommand(cfg: CommandShape = {}): CommandBuilder {
 	const builder: DeepPartial<CommandBuilder> = {
 		run(fn: (...args: any[]) => any) {

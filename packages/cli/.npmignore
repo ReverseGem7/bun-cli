@@ -1,0 +1,25 @@
+# Source files (we only want the built output)
+src/
+tsconfig.json
+tsdown.config.ts
+biome.json
+
+# Development files
+*.test.js
+*.test.ts
+__tests__/
+tests/
+
+# Turborepo
+.turbo/
+
+# Build artifacts
+*.tsbuildinfo
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db 

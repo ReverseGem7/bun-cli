@@ -18,7 +18,7 @@ export type CommandNode = {
 	[key: string]: CommandNode | RunableCommand<any>;
 };
 
-export type CommandTree = CommandNode
+export type CommandTree = CommandNode;
 // TODO add help and version commands
 // & {
 // 	help?: HelpCommand;

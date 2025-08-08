@@ -1,6 +1,17 @@
+/**
+ * Unique symbol used to tag types in the CLI system.
+ * @type {unique symbol}
+ */
 export const $type: unique symbol = Symbol("type");
+/**
+ * Unique symbol used to tag definitions in the CLI system.
+ * @type {unique symbol}
+ */
 export const $def: unique symbol = Symbol("def");
-
+/**
+ * Error messages used throughout the CLI system.
+ * @type {Object}
+ */
 export const ERROR = {
 	INVALID_SCHEMA:
 		"Invalid schema, only standar schema specification is supported",

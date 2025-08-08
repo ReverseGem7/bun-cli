@@ -9,6 +9,13 @@ import type { ErrorFormatterFn } from "./types/util";
 import { standardValidate } from "./vendor/standar-schema-v1/parse";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
+/**
+ * Parses and validates raw flag values according to the provided flag schemas.
+ * @param {FlagMap<Flag>} flags - The flag definitions and schemas.
+ * @param {Record<string, unknown>} rawFlags - The raw flag values from CLI input.
+ * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
+ * @returns {Promise<Record<string, unknown>>} The parsed and validated flag values.
+ */
 async function parseRawFlags(
 	flags: FlagMap<Flag>,
 	rawFlags: Record<string, unknown>,
@@ -54,6 +61,13 @@ async function parseRawFlags(
 	return Object.fromEntries(entries);
 }
 
+/**
+ * Parses and validates positional arguments according to the provided schemas.
+ * @param {[StandardSchemaV1, ...StandardSchemaV1[]]} schemas - The positional argument schemas.
+ * @param {unknown[]} values - The values to validate.
+ * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
+ * @returns {Promise<unknown[]>} The validated positional values.
+ */
 export async function parseRawPositionals(
 	schemas: [StandardSchemaV1, ...StandardSchemaV1[]],
 	values: unknown[],
@@ -87,6 +101,14 @@ export async function parseRawPositionals(
 	);
 }
 
+/**
+ * Parses CLI command input into validated flags and positionals for a given command.
+ * @template F, P
+ * @param {{ flags: any; positionals: any }} raw - The raw input from CLI.
+ * @param {RunableCommand<{ flags: F; positionals: P }>} cmd - The command definition.
+ * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
+ * @returns {Promise<{ flags: any; positionals: any }>} The parsed and validated input.
+ */
 export async function parseCommandInput<
 	F extends FlagMap<Flag> | undefined,
 	P extends Positional | undefined,
@@ -112,10 +134,10 @@ export async function parseCommandInput<
 	const parsedPositionals =
 		cmd.positionals && "raw" in cmd.positionals
 			? await parseRawPositionals(
-				cmd.positionals.raw,
-				raw.positionals ?? [],
-				errorFormatter,
-			)
+					cmd.positionals.raw,
+					raw.positionals ?? [],
+					errorFormatter,
+				)
 			: [];
 
 	if (!cmd.runFn) throw new Error(ERROR.NO_RUN_FUNCTION);
@@ -126,10 +148,22 @@ export async function parseCommandInput<
 	});
 }
 
+/**
+ * Checks if a command node is a runnable command.
+ * @param {CommandNode | RunableCommand} cmd - The command node to check.
+ * @returns {boolean} True if the node is a runnable command.
+ */
 function isRunable(cmd: CommandNode | RunableCommand): cmd is RunableCommand {
 	return $type in cmd && (cmd as any)[$type] === "runable";
 }
 
+/**
+ * Recursively collects commands from a command tree.
+ * @param {CommandNode | RunableCommand} tree - The command tree.
+ * @param {string[]} positionals - The positional arguments.
+ * @param {number[]} positionalIndexesInArgs - The indexes of positionals in the args array.
+ * @returns {any[]} The collected commands.
+ */
 function getCommands(
 	tree: CommandNode | RunableCommand,
 	positionals: string[],
@@ -167,6 +201,13 @@ function getCommands(
 	};
 }
 
+/**
+ * Creates a CLI caller for a command tree, enabling command execution and input parsing.
+ * @template T
+ * @param {T} tree - The command tree.
+ * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
+ * @returns {Caller<T>} The CLI caller instance.
+ */
 export function caller<T extends CommandNode>(
 	tree: T,
 	errorFormatter?: ErrorFormatterFn,
@@ -211,6 +252,13 @@ export function caller<T extends CommandNode>(
 	return walk(tree) as Caller<T>;
 }
 
+/**
+ * Creates and runs a CLI command tree.
+ * @template T
+ * @param {T} tree - The command tree.
+ * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
+ * @returns {Promise<void>} Resolves when the command is executed.
+ */
 export async function create<T extends CommandNode>(
 	tree: T,
 	errorFormatter?: ErrorFormatterFn,
