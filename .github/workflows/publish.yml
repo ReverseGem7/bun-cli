@@ -44,4 +44,4 @@ jobs:
       - name: Publish package
         run: bun run publish
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }} 
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_CONFIG_TOKEN }} 
