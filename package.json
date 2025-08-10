@@ -3,19 +3,23 @@
 	"version": "0.1.0",
 	"scripts": {
 		"format": "biome format --fix",
-		"lint": "biome lint",
+		"lint": "biome lint --fix",
 		"build": "turbo run build",
+		"check": "bun run check-style & bun run check-types",
+		"check-style": "biome check",
 		"check-types": "turbo run check-types",
-		"publish": "turbo run publish"
+		"publish": "turbo run publish",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.4",
 		"@types/bun": "latest",
 		"biome": "^0.3.3",
+		"husky": "^9.1.7",
 		"turbo": "^2.5.5"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "^5.9.2"
 	},
 	"type": "module",
 	"packageManager": "bun@1.2.0",
