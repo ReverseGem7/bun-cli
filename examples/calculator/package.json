@@ -10,7 +10,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"zod": "^4.0.0",
-		"clivex": "workspace:*"
+		"clivex": "latest",
+		"zod": "^4.0.0"
 	}
 }

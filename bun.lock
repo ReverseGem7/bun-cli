@@ -9,15 +9,13 @@
         "biome": "^0.3.3",
         "husky": "^9.1.7",
         "turbo": "^2.5.5",
-      },
-      "peerDependencies": {
         "typescript": "^5.9.2",
       },
     },
     "examples/calculator": {
       "name": "calulator",
       "dependencies": {
-        "clivex": "workspace:*",
+        "clivex": "latest",
         "zod": "^4.0.0",
       },
       "devDependencies": {
@@ -29,7 +27,7 @@
     },
     "packages/cli": {
       "name": "clivex",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "devDependencies": {
         "@types/bun": "latest",
         "biome": "^0.3.3",
@@ -40,9 +38,6 @@
       },
     },
   },
-  "trustedDependencies": [
-    "core-js",
-  ],
   "packages": {
     "@babel/generator": ["@babel/generator@7.28.0", "", { "dependencies": { "@babel/parser": "^7.28.0", "@babel/types": "^7.28.0", "@jridgewell/gen-mapping": "^0.3.12", "@jridgewell/trace-mapping": "^0.3.28", "jsesc": "^3.0.2" } }, "sha512-lJjzvrbEeWrhB4P3QBsH7tey117PjLZnDbLiQEKjQ/fNJTjuq4HSqgFA+UNSwZT8D7dxxbnuSBMsa1lrWzKlQg=="],
 
@@ -435,6 +430,8 @@
     "wrappy": ["wrappy@1.0.2", "", {}, "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="],
 
     "zod": ["zod@4.0.15", "", {}, "sha512-2IVHb9h4Mt6+UXkyMs0XbfICUh1eUrlJJAOupBHUhLRnKkruawyDddYRCs0Eizt900ntIMk9/4RksYl+FgSpcQ=="],
+
+    "calulator/clivex": ["clivex@0.2.1", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-W3Qm86b1jbPoHEJvhEZB+iZqySlA0Ujuc/a2btqrUR/YFFMIUEXHvfXCGr3Kw86+6kgrhhDQhJ8Qpj0F+ytwsg=="],
 
     "inquirer/lodash": ["lodash@3.10.1", "", {}, "sha512-9mDDwqVIma6OZX79ZlDACZl8sBm0TEnkf99zV3iMA4GzkIT/9hiqP5mY0HoT1iNLCrKc/R1HByV+yJfRWVJryQ=="],
   }

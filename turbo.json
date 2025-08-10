@@ -5,7 +5,7 @@
 			"dependsOn": ["^build"]
 		},
 		"publish": {
-			"dependsOn": ["^build"]
+			"dependsOn": ["check", "build"]
 		},
 		"check-types": {
 			"dependsOn": ["^check-types"]
