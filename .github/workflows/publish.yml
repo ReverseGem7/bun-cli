@@ -28,19 +28,11 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      # Step 4: Run type checking
-      - name: Check types
-        run: bun run check-types
-
-      # Step 5: Run linting
+      # Step 4: Run linting, formating and type checking
       - name: Run linting
-        run: bun run lint
+        run: bun run check
 
-      # Step 6: Build the package
-      - name: Build package
-        run: bun run build
-
-      # Step 7: Publish the package
+      # Step 5: Build and publish the package
       - name: Publish package
         run: bun run publish
         env:
