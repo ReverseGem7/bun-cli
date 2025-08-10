@@ -31,12 +31,7 @@ jobs:
       # Step 4: Run linting, formating and type checking
       - name: Run linting
         run: bun run check
-
-      - name: Setup npm authentication
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_CONFIG_TOKEN }}" > ~/.npmrc
-
+        
       # Step 5: Build and publish the package
       - name: Publish package
         run: NPM_CONFIG_TOKEN=${{ secrets.NPM_CONFIG_TOKEN }} bun run publish
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_CONFIG_TOKEN }}
