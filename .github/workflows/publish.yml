@@ -37,4 +37,4 @@ jobs:
 
       # Step 5: Build and publish the package
       - name: Publish package
-        run: NPM_CONFIG_TOKEN=${{ secrets.NPM_CONFIG_TOKEN }} bun run publish
+        run: NPM_CONFIG_TOKEN=${{ secrets.NPM_CONFIG_TOKEN }} bunx turbo run publish -F=./packages/*
