@@ -1,3 +1,6 @@
+export type ValidateShape<Recived, Expected> = Recived &
+	Expected &
+	Record<Exclude<keyof Recived, keyof Expected>, never>;
 export type Prettify<T> = { [K in keyof T]: T[K] } & {};
 export type DeepPartial<TObject> = TObject extends object
 	? {

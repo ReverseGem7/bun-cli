@@ -1,37 +1,36 @@
 import { $type, ERROR } from "./constants";
-import type { FlagDescriptor, Options } from "./types/flags";
+import type { FlagDescriptor, FlagOptions } from "./types/flags";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
 /**
  * Creates a flag builder for defining CLI flags with schema validation and options.
- * @returns {Object} An object with an input method for flag schema definition.
  */
 export function createFlag() {
 	function makeFlagDescriptor<
-		T extends { type: StandardSchemaV1.InferOutput<R>; options?: Options },
-		R extends StandardSchemaV1 = StandardSchemaV1,
-	>(raw: R, config?: T["options"]): FlagDescriptor<T> {
-		return {
-			config,
+		R extends StandardSchemaV1,
+		T = StandardSchemaV1.InferOutput<R>,
+	>(raw: R): FlagDescriptor<{ type: T; options?: FlagOptions }> {
+		const base = {
 			raw,
 			[$type]: "flag",
-			options<const O extends Options>(opt: O) {
-				return makeFlagDescriptor<{
-					type: O["multiple"] extends true ? T["type"][] : T["type"];
-					options: { [K in keyof O]: O[K] };
-				}>(raw, opt);
-			},
 		};
+		return {
+			...base,
+			options<O extends FlagOptions>(opt: O) {
+				return {
+					config: opt,
+					...base,
+				};
+			},
+		} as any;
 	}
 
 	return {
 		input<T extends StandardSchemaV1>(schema: T) {
-			if (!schema || !("~standard" in schema))
+			if (!schema || !("~standard" in schema)) {
 				throw new Error(ERROR.INVALID_SCHEMA);
-
-			return makeFlagDescriptor<{
-				type: StandardSchemaV1.InferOutput<T>;
-			}>(schema);
+			}
+			return makeFlagDescriptor(schema);
 		},
 	};
 }
