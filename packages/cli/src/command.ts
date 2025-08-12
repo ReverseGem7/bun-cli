@@ -12,7 +12,15 @@ import type { DeepPartial } from "./types/util";
  * Creates a command builder for defining CLI commands, flags, and positionals.
  * @returns {CommandBuilder} The command builder instance.
  */
-export function createCommand(cfg: CommandShape = {}): CommandBuilder {
+export function createCommand<Context extends object>(
+	cfg: CommandShape = {},
+): CommandBuilder<{
+	flags: undefined;
+	positionals: undefined;
+	subcommands: undefined;
+	middleware: false;
+	ctx: Context;
+}> {
 	const builder: DeepPartial<CommandBuilder> = {
 		run(fn: (...args: any[]) => any) {
 			return {
@@ -69,5 +77,11 @@ export function createCommand(cfg: CommandShape = {}): CommandBuilder {
 			});
 	}
 
-	return builder as CommandBuilder;
+	return builder as CommandBuilder<{
+		flags: undefined;
+		positionals: undefined;
+		subcommands: undefined;
+		middleware: false;
+		ctx: Context;
+	}>;
 }

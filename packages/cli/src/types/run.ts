@@ -38,10 +38,10 @@ export type RunableCommand<
 export type RunFn<S extends CommandShape> = {
 	run<TOutput extends void | Promise<void>>(
 		fn: (
-			ctx: ParamsOrUndefined<
+			args: ParamsOrUndefined<
 				ExtractFlagsType<S["flags"]>,
 				ExtractPositionalsType<S["positionals"]>
-			>,
+			> & { ctx: S["ctx"] },
 		) => TOutput,
 	): RunableCommand<{
 		flags: S["flags"];

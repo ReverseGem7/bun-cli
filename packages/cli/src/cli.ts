@@ -6,9 +6,27 @@ import type { CommandTree } from "./types/command";
 import type { ErrorFormatterFn } from "./types/util";
 
 /**
+ * Unwrap return type if the type is a function (sync or async), else use the type as is
+ * @internal
+ */
+export type Unwrap<TType> = TType extends (...args: any[]) => infer R
+	? Awaited<R>
+	: TType;
+
+type ContextCallback = (...args: any[]) => object | Promise<object>;
+
+/**
  * CLIBuilder provides a fluent interface for initializing and configuring the CLI system.
  */
-class CLIBuilder {
+class CLIBuilder<Contex extends object = {}> {
+	/**
+	 * Add a context shape as a generic to the root object
+	 */
+	context<NewContext extends object | ContextCallback>() {
+		return new CLIBuilder<
+			NewContext extends ContextCallback ? Unwrap<NewContext> : NewContext
+		>();
+	}
 	/**
 	 * Creates CLI utilities for building commands, flags, and positionals.
 	 * @param {Object} [options]
@@ -31,7 +49,7 @@ class CLIBuilder {
 			 * For defining CLI commands, flags, and positionals.
 			 * @returns {CommandBuilder} The command builder instance.
 			 */
-			command: createCommand(),
+			command: createCommand<Contex>(),
 
 			/**
 			 * Creates a caller function for executing commands with validation.
@@ -47,7 +65,7 @@ class CLIBuilder {
 			 * @param {CommandTree} tree - The command tree to use.
 			 * @returns {Promise<void>}
 			 */
-			create: (tree: CommandTree): Promise<void> => create(tree, errorFormater),
+			runCLI: (tree: CommandTree): Promise<void> => create(tree, errorFormater),
 
 			/**
 			 * Returns the provided command tree as-is, for type inference and chaining.

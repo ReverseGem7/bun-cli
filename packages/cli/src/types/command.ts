@@ -8,30 +8,32 @@ export type CommandShape = {
 	flags?: FlagMap<Flag>;
 	positionals?: Positional;
 	subcommands?: CommandNode;
+	ctx?: object;
 };
 
-// export type HelpCommand = RunableCommand<any>;
-
-// export type VersionCommand = RunableCommand<any>;
+export type BuiltInCommand = RunableCommand<{
+	output: void | Promise<void>;
+	flags: undefined;
+	positionals: undefined;
+	subcommands: undefined;
+}>;
 
 export type CommandNode = {
 	[key: string]: CommandNode | RunableCommand<any>;
 };
 
-export type CommandTree = CommandNode;
-// TODO add help and version commands
-// & {
-// 	help?: HelpCommand;
-// 	version?: VersionCommand;
-// };
+export type CommandTree = CommandNode & {
+	help?: BuiltInCommand;
+	version?: BuiltInCommand;
+};
 
 export type CommandBuilder<
 	S extends CommandShape = {
-		type: "command";
 		flags: undefined;
 		positionals: undefined;
 		subcommands: undefined;
 		middleware: false;
+		ctx: object;
 	},
 > = (S["flags"] extends undefined ? FlagFn<S> : {}) &
 	(S["positionals"] extends undefined ? PositionalFn<S> : {}) &

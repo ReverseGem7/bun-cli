@@ -16,6 +16,7 @@ import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
  * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
  * @returns {Promise<Record<string, unknown>>} The parsed and validated flag values.
  */
+
 async function parseRawFlags(
 	flags: FlagMap<Flag>,
 	rawFlags: Record<string, unknown>,
