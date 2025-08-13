@@ -2,23 +2,22 @@ import { $type, ERROR } from "./constants";
 import { parseArgs, parsePositionals } from "./parseArgs";
 import type { Caller } from "./types/caller";
 import type { CommandNode } from "./types/command";
-import type { Flag, FlagMap } from "./types/flags";
-import type { Positional } from "./types/positionals";
+import type { Flag, Flags } from "./types/flags";
+import type { Positional, Positionals } from "./types/positionals";
 import type { RunableCommand } from "./types/run";
 import type { ErrorFormatterFn } from "./types/util";
 import { standardValidate } from "./vendor/standar-schema-v1/parse";
-import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
 /**
  * Parses and validates raw flag values according to the provided flag schemas.
- * @param {FlagMap<Flag>} flags - The flag definitions and schemas.
+ * @param {Flags<Flag>} flags - The flag definitions and schemas.
  * @param {Record<string, unknown>} rawFlags - The raw flag values from CLI input.
  * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
  * @returns {Promise<Record<string, unknown>>} The parsed and validated flag values.
  */
 
 async function parseRawFlags(
-	flags: FlagMap<Flag>,
+	flags: Flags<Flag>,
 	rawFlags: Record<string, unknown>,
 	errorFormatter?: ErrorFormatterFn,
 ): Promise<Record<string, unknown>> {
@@ -70,31 +69,31 @@ async function parseRawFlags(
  * @returns {Promise<unknown[]>} The validated positional values.
  */
 export async function parseRawPositionals(
-	schemas: [StandardSchemaV1, ...StandardSchemaV1[]],
+	positional: Positionals<Positional>,
 	values: unknown[],
 	errorFormatter?: ErrorFormatterFn,
 ): Promise<unknown[]> {
-	if (values.length !== schemas.length) {
+	if (values.length !== positional.raw.length) {
 		const error = new Error(ERROR.INVALID_POSITIONAL_COUNT);
 		if (errorFormatter) {
 			errorFormatter({
 				kind: "positional",
 				keyOrIndex: values.length,
-				description: `Expected ${schemas.length} positional arguments, but got ${values.length}`,
+				description: `Expected ${positional.raw.length} positional arguments, but got ${values.length}`,
 			});
 		}
 		throw error;
 	}
 
 	return await Promise.all(
-		schemas.map((schema, i) =>
+		positional.raw.map((schema, i) =>
 			standardValidate(
 				schema,
 				values[i],
 				{
 					kind: "positional",
 					keyOrIndex: i,
-					description: `Positional argument ${i + 1}`,
+					description: positional.meta[i],
 				},
 				errorFormatter,
 			),
@@ -111,8 +110,8 @@ export async function parseRawPositionals(
  * @returns {Promise<{ flags: any; positionals: any }>} The parsed and validated input.
  */
 export async function parseCommandInput<
-	F extends FlagMap<Flag> | undefined,
-	P extends Positional | undefined,
+	F extends Flags<Flag> | undefined,
+	P extends Positionals<Positional> | undefined,
 >(
 	raw: {
 		flags: any;
@@ -135,7 +134,7 @@ export async function parseCommandInput<
 	const parsedPositionals =
 		cmd.positionals && "raw" in cmd.positionals
 			? await parseRawPositionals(
-					cmd.positionals.raw,
+					cmd.positionals,
 					raw.positionals ?? [],
 					errorFormatter,
 				)
@@ -154,7 +153,9 @@ export async function parseCommandInput<
  * @param {CommandNode | RunableCommand} cmd - The command node to check.
  * @returns {boolean} True if the node is a runnable command.
  */
-function isRunable(cmd: CommandNode | RunableCommand): cmd is RunableCommand {
+function isRunable(
+	cmd: CommandNode | RunableCommand<any>,
+): cmd is RunableCommand<any> {
 	return $type in cmd && (cmd as any)[$type] === "runable";
 }
 
@@ -166,16 +167,19 @@ function isRunable(cmd: CommandNode | RunableCommand): cmd is RunableCommand {
  * @returns {any[]} The collected commands.
  */
 function getCommands(
-	tree: CommandNode | RunableCommand,
+	tree: CommandNode | RunableCommand<any>,
 	positionals: string[],
 	positionalIndexesInArgs: number[],
 ) {
 	const steps = positionals.map((key, i) => ({ key, i }));
-	let current: CommandNode | RunableCommand = tree;
+	let current: CommandNode | RunableCommand<any> = tree;
 	let path: number[] = [];
 	const used = new Set<number>();
-	const history: { cmd: RunableCommand; path: number[]; used: Set<number> }[] =
-		[];
+	const history: {
+		cmd: RunableCommand<any>;
+		path: number[];
+		used: Set<number>;
+	}[] = [];
 
 	for (const { key, i } of steps) {
 		used.add(i);

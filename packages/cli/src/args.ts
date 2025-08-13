@@ -1,5 +1,9 @@
 import { $type, ERROR } from "./constants";
 import type { FlagDescriptor, FlagOptions } from "./types/flags";
+import type {
+	PositionalDescriptor,
+	PositionalOptions,
+} from "./types/positionals";
 import type { StandardSchemaV1 } from "./vendor/standar-schema-v1/spec";
 
 /**
@@ -9,7 +13,7 @@ export function createFlag() {
 	function makeFlagDescriptor<
 		R extends StandardSchemaV1,
 		T = StandardSchemaV1.InferOutput<R>,
-	>(raw: R): FlagDescriptor<{ type: T; options?: FlagOptions }> {
+	>(raw: R): FlagDescriptor<{ type: T; options?: undefined }> {
 		const base = {
 			raw,
 			[$type]: "flag",
@@ -40,11 +44,31 @@ export function createFlag() {
  * @returns {Object} An object with an input method for positional schema definition.
  */
 export function createPositional() {
+	function makePositionalDescriptor<
+		R extends StandardSchemaV1,
+		T = StandardSchemaV1.InferOutput<R>,
+	>(raw: R): PositionalDescriptor<{ type: T; options?: undefined }> {
+		const base = {
+			raw,
+			[$type]: "positional",
+		};
+
+		return {
+			...base,
+			options<O extends PositionalOptions>(opt: O) {
+				return {
+					config: opt,
+					...base,
+				};
+			},
+		} as any;
+	}
+
 	return {
 		input<T extends StandardSchemaV1>(schema: T) {
 			if (!schema || !("~standard" in schema))
 				throw new Error(ERROR.INVALID_SCHEMA);
-			return schema;
+			return makePositionalDescriptor(schema);
 		},
 	};
 }

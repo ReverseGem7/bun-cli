@@ -24,7 +24,7 @@ export class ValidationError extends Error {
 		const label =
 			meta.kind === "flag"
 				? `The flag --${meta.keyOrIndex}${meta.description ? ` (${meta.description})` : ""} is not valid:`
-				: `The positional ${meta.keyOrIndex}${meta.description ? ` (${meta.description})` : ""} is not valid:`;
+				: `The positional ${+meta.keyOrIndex + 1}${meta.description ? ` (${meta.description})` : ""} is not valid:`;
 
 		const messages = issues.map((issue) => {
 			const path =

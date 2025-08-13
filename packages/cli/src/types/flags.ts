@@ -36,7 +36,7 @@ export type FlagDescriptor<
 		? FlagOptionFn<T>
 		: {}) & { [$type]: "flag" };
 
-export type FlagMap<
+export type Flags<
 	T extends Record<string, FlagDescriptor> = Record<string, FlagDescriptor>,
 > = {
 	raw: Record<string, StandardSchemaV1>;
@@ -51,7 +51,7 @@ type ExtractFlags<T extends Record<string, FlagDescriptor>> = {
 	[K in keyof T]: T[K] extends FlagDescriptor<infer U> ? U["type"] : undefined;
 };
 
-export type ExtractFlagsType<T> = T extends FlagMap<infer U>
+export type ExtractFlagsType<T> = T extends Flags<infer U>
 	? Prettify<ExtractFlags<U>>
 	: undefined;
 
@@ -66,9 +66,10 @@ export type FlagFn<S extends CommandShape> = {
 	flags<F extends Record<string, FlagDescriptor>>(
 		def: F,
 	): CommandBuilder<{
-		flags: FlagMap<F>;
+		flags: Flags<F>;
 		positionals: S["positionals"];
 		subcommands: S["subcommands"];
+		output: undefined;
 		ctx: S["ctx"];
 	}>;
 };

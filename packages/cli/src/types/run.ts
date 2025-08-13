@@ -1,7 +1,7 @@
 import type { $def, $type } from "../constants";
-import type { CommandNode, CommandShape } from "./command";
-import type { ExtractFlagsType, Flag, FlagMap } from "./flags";
-import type { ExtractPositionalsType, Positional } from "./positionals";
+import type { CommandShape } from "./command";
+import type { ExtractFlagsType } from "./flags";
+import type { ExtractPositionalsType } from "./positionals";
 
 export type ParamsOrUndefined<F, P> = F extends undefined
 	? P extends undefined
@@ -11,19 +11,7 @@ export type ParamsOrUndefined<F, P> = F extends undefined
 		? { flags: F }
 		: { flags: F; positionals: P };
 
-export type RunableCommand<
-	T extends {
-		flags?: FlagMap<Flag>;
-		positionals?: Positional;
-		output: void | Promise<void>;
-		subcommands?: CommandNode;
-	} = {
-		flags: FlagMap<Flag>;
-		positionals: Positional;
-		output: void | Promise<void>;
-		subcommands: CommandNode;
-	},
-> = {
+export type RunableCommand<T extends CommandShape> = {
 	[$type]: "runable";
 	[$def]?: T;
 	flags: T["flags"];

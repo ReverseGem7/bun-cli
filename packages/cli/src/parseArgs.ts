@@ -144,7 +144,10 @@ export function parsePositionals(args: string[]) {
  * @param {RunableCommand} cmd - The command definition.
  * @returns {ParsedArgs} The parsed flags and positionals.
  */
-export function parseArgs(args: string[], cmd: RunableCommand): ParsedArgs {
+export function parseArgs(
+	args: string[],
+	cmd: RunableCommand<any>,
+): ParsedArgs {
 	const flags: Record<string, ParsedFlag> = {};
 	const positionals: any[] = [];
 	const shortToLong = cmd.flags.shortToLong;

@@ -5,7 +5,7 @@ import type {
 	CommandShape,
 } from "./types/command";
 import type { Flag } from "./types/flags";
-import type { PositionalInput } from "./types/positionals";
+import type { Positional } from "./types/positionals";
 import type { DeepPartial } from "./types/util";
 
 /**
@@ -18,6 +18,7 @@ export function createCommand<Context extends object>(
 	flags: undefined;
 	positionals: undefined;
 	subcommands: undefined;
+	output: undefined;
 	middleware: false;
 	ctx: Context;
 }> {
@@ -67,12 +68,17 @@ export function createCommand<Context extends object>(
 	}
 
 	if (!cfg.positionals) {
-		builder.positionals = (p: PositionalInput) =>
+		builder.positionals = (p: Positional) =>
 			createCommand({
 				...cfg,
 				positionals: {
-					[$type]: "positional",
-					raw: p,
+					[$type]: "positionals",
+					raw: p.map((v) => v.raw),
+					meta: Object.fromEntries(
+						Object.entries(p)
+							.filter(([, v]) => v.config?.description)
+							.map(([k, v]) => [k, v.config!.description!]),
+					),
 				},
 			});
 	}
@@ -81,6 +87,7 @@ export function createCommand<Context extends object>(
 		flags: undefined;
 		positionals: undefined;
 		subcommands: undefined;
+		output: undefined;
 		middleware: false;
 		ctx: Context;
 	}>;

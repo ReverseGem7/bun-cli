@@ -1,13 +1,14 @@
 import type { $type } from "../constants";
-import type { Flag, FlagFn, FlagMap } from "./flags";
-import type { Positional, PositionalFn } from "./positionals";
+import type { Flag, FlagFn, Flags } from "./flags";
+import type { Positional, PositionalFn, Positionals } from "./positionals";
 import type { RunableCommand, RunFn } from "./run";
 import type { SubCommandsFn } from "./subcommand";
 
 export type CommandShape = {
-	flags?: FlagMap<Flag>;
-	positionals?: Positional;
+	flags?: Flags<Flag>;
+	positionals?: Positionals<Positional>;
 	subcommands?: CommandNode;
+	output?: void | Promise<void>;
 	ctx?: object;
 };
 
@@ -32,6 +33,7 @@ export type CommandBuilder<
 		flags: undefined;
 		positionals: undefined;
 		subcommands: undefined;
+		output: undefined;
 		middleware: false;
 		ctx: object;
 	},
