@@ -2,6 +2,9 @@
 	"name": "clivex",
 	"version": "0.2.6",
 	"description": "A CLI tool for development",
+	"files": [
+		"dist"
+	],
 	"exports": {
 		".": {
 			"import": {
@@ -18,7 +21,7 @@
 	"scripts": {
 		"build": "tsdown",
 		"check-types": "tsc --noEmit",
-		"publish": "bun publish"
+		"relase": "bun publish"
 	},
 	"keywords": [
 		"cli",
@@ -29,7 +32,8 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ReverseGem7/clivex.git"
+		"url": "https://github.com/ReverseGem7/clivex.git",
+		"directory": "packages/cli"
 	},
 	"bugs": {
 		"url": "https://github.com/ReverseGem7/clivex/issues"

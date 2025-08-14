@@ -58,14 +58,15 @@ class CLIBuilder<Contex extends object = {}> {
 			 * @returns {Caller<T>} The caller function for the provided command tree.
 			 */
 			caller: <T extends CommandTree>(tree: T): Caller<T> =>
-				caller(tree, errorFormater),
+				caller<T>(tree, errorFormater),
 
 			/**
 			 * Creates a CLI instance with the provided command tree and error formatter.
 			 * @param {CommandTree} tree - The command tree to use.
 			 * @returns {Promise<void>}
 			 */
-			runCLI: (tree: CommandTree): Promise<void> => create(tree, errorFormater),
+			runCLI: <T extends CommandTree>(tree: T): Promise<void> =>
+				create<T>(tree, errorFormater),
 
 			/**
 			 * Returns the provided command tree as-is, for type inference and chaining.
