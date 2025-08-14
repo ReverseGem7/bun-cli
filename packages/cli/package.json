@@ -21,7 +21,7 @@
 	"scripts": {
 		"build": "tsdown",
 		"check-types": "tsc --noEmit",
-		"relase": "bun publish"
+		"release": "bun publish"
 	},
 	"keywords": [
 		"cli",
