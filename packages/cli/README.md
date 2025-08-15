@@ -61,7 +61,7 @@ const cli = commands({
     }),
 });
 
-create(cli);
+runCLI(cli);
 ```
 
 Run it:
@@ -125,7 +125,7 @@ const cli = commands({
     }),
 });
 
-create(cli);
+runCLI(cli);
 ```
 
 ### Complex CLI with Subcommands
@@ -187,7 +187,7 @@ const cli = commands({
   },
 });
 
-create(cli);
+runCLI(cli);
 ```
 
 ### CLI with Custom Error Formatter

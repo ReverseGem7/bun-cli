@@ -20,7 +20,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "tsdown",
-		"check-types": "tsc --noEmit",
+		"check:types": "tsc --noEmit",
 		"release": "bun publish"
 	},
 	"keywords": [

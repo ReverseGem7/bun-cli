@@ -1,7 +1,7 @@
 import { initCLI } from "clivex";
 import * as z from "zod/v4";
 
-const { flag, positional, command, commands, create } = initCLI.create();
+const { flag, positional, command, commands, runCLI } = initCLI.create();
 
 const cli = commands({
 	calculator: command
@@ -44,4 +44,4 @@ const cli = commands({
 		}),
 });
 
-create(cli);
+runCLI(cli);
