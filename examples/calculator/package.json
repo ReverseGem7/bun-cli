@@ -10,8 +10,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@trpc/server": "^11.4.4",
-		"clivex": "^0.2.6",
+		"clivex": "latest",
 		"zod": "^4.0.0"
 	}
 }
