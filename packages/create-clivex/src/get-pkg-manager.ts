@@ -1,19 +1,16 @@
 export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
 export function getPkgManager(): PackageManager {
-	const userAgent = process.argv0 || process.env.npm_config_user_agent || "";
+	const ua = process.env.npm_config_user_agent || "";
+	const execPath = process.env.npm_execpath || "";
 
-	if (userAgent.startsWith("yarn")) {
-		return "yarn";
-	}
+	if (ua.startsWith("bun")) return "bun";
+	if (ua.startsWith("yarn")) return "yarn";
+	if (ua.startsWith("pnpm")) return "pnpm";
 
-	if (userAgent.startsWith("pnpm")) {
-		return "pnpm";
-	}
-
-	if (userAgent.startsWith("bun")) {
-		return "bun";
-	}
+	if (execPath.includes("bun")) return "bun";
+	if (execPath.includes("yarn.js")) return "yarn";
+	if (execPath.includes("pnpm")) return "pnpm";
 
 	return "npm";
 }

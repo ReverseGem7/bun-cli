@@ -12,7 +12,7 @@ import {
 import { initCLI } from "clivex";
 import { z } from "zod/v4-mini";
 import { createDir } from "./create-dir";
-import { getPkgManager } from "./get-pkg-manager";
+import { getPkgManager, type PackageManager } from "./get-pkg-manager";
 import { install } from "./install";
 
 const { flag, command, runCLI } = initCLI.create();
@@ -39,20 +39,20 @@ const cli = command
 					flags.name
 						? Promise.resolve(flags.name)
 						: text({
-								message: "Project name:",
-								placeholder: "my-app",
-								defaultValue: "my-app",
-							}),
+							message: "Project name:",
+							placeholder: "my-app",
+							defaultValue: "my-app",
+						}),
 				template: () =>
 					flags.template
 						? Promise.resolve(flags.template)
 						: select({
-								message: "Choose a template:",
-								options: [
-									{ value: "greetings", label: "Greetings" },
-									{ value: "calculator", label: "Calculator" },
-								],
-							}),
+							message: "Choose a template:",
+							options: [
+								{ value: "greetings", label: "Greetings" },
+								{ value: "calculator", label: "Calculator" },
+							],
+						}),
 			},
 			{
 				onCancel: () => {
@@ -71,12 +71,23 @@ const cli = command
 
 		const pkgManager = getPkgManager();
 
+		const selectedPkgManager = await select({
+			message: "Choose a package manager:",
+			options: [
+				{ value: "bun", label: "bun" },
+				{ value: "pnpm", label: "pnpm" },
+				{ value: "yarn", label: "yarn" },
+				{ value: "npm", label: "npm" },
+			],
+			initialValue: pkgManager
+		}) as PackageManager
+
 		if (shouldInstall) {
 			const s = spinner();
-			s.start(`Installing via ${pkgManager}...`);
+			s.start(`Installing via ${selectedPkgManager}...`);
 			try {
-				await install(pkgManager, targetDir);
-				s.stop(`Installed via ${pkgManager}`);
+				await install(selectedPkgManager, targetDir);
+				s.stop(`Installed via ${selectedPkgManager}`);
 			} catch (err) {
 				s.stop("Installation failed");
 				console.error(err);

@@ -1,7 +1,7 @@
 {
 	"name": "create-clivex",
 	"description": "CLI tool to scaffold Clivex projects quickly and type-safely",
-	"version": "0.0.3",
+	"version": "0.2.0",
 	"bin": {
 		"create-clivex": "./dist/index.js"
 	},
