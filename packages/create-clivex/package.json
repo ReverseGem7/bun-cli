@@ -1,7 +1,7 @@
 {
 	"name": "create-clivex",
 	"description": "CLI tool to scaffold Clivex projects quickly and type-safely",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"bin": {
 		"create-clivex": "./dist/index.js"
 	},
@@ -10,7 +10,7 @@
 		"templates"
 	],
 	"scripts": {
-		"build": "bun build --minify --target=node --outdir=dist ./src/index.ts ",
+		"build": "bun run build.ts ",
 		"check:types": "tsc --noEmit",
 		"release": "bun publish"
 	},
