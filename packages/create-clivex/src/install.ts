@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { log } from "@clack/prompts";
-import type { PackageManager } from "./helpers/get-pkg-manager";
+import type { PackageManager } from "./get-pkg-manager";
 
 /**
  * Installs dependencies using the selected package manager.
