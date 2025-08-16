@@ -1,0 +1,12 @@
+{
+	"name": "greetings",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"clivex": "latest",
+		"zod": "^4.0.0"
+	}
+}

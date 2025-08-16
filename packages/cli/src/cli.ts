@@ -3,6 +3,7 @@ import { caller, create } from "./caller";
 import { createCommand } from "./command";
 import type { Caller } from "./types/caller";
 import type { CommandTree } from "./types/command";
+import type { RunableCommand } from "./types/run";
 import type { ErrorFormatterFn } from "./types/util";
 
 /**
@@ -57,16 +58,18 @@ class CLIBuilder<Contex extends object = {}> {
 			 * @param {T} tree - The command tree to use.
 			 * @returns {Caller<T>} The caller function for the provided command tree.
 			 */
-			caller: <T extends CommandTree>(tree: T): Caller<T> =>
-				caller<T>(tree, errorFormater),
+			caller: <T extends CommandTree | RunableCommand<any>>(
+				tree: T,
+			): Caller<T> => caller<T>(tree, errorFormater),
 
 			/**
 			 * Creates a CLI instance with the provided command tree and error formatter.
 			 * @param {CommandTree} tree - The command tree to use.
 			 * @returns {Promise<void>}
 			 */
-			runCLI: <T extends CommandTree>(tree: T): Promise<void> =>
-				create<T>(tree, errorFormater),
+			runCLI: <T extends CommandTree | RunableCommand<any>>(
+				tree: T,
+			): Promise<void> => create<T>(tree, errorFormater),
 
 			/**
 			 * Returns the provided command tree as-is, for type inference and chaining.

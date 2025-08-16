@@ -1,6 +1,6 @@
 {
 	"name": "clivex",
-	"version": "0.2.7",
+	"version": "0.3.0",
 	"description": "A CLI tool for development",
 	"files": [
 		"dist"

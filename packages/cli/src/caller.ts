@@ -1,7 +1,7 @@
 import { $type, ERROR } from "./constants";
 import { parseArgs, parsePositionals } from "./parseArgs";
 import type { Caller } from "./types/caller";
-import type { CommandNode } from "./types/command";
+import type { CommandNode, CommandTree } from "./types/command";
 import type { Flag, Flags } from "./types/flags";
 import type { Positional, Positionals } from "./types/positionals";
 import type { RunableCommand } from "./types/run";
@@ -213,7 +213,7 @@ function getCommands(
  * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
  * @returns {Caller<T>} The CLI caller instance.
  */
-export function caller<T extends CommandNode>(
+export function caller<T extends CommandTree | RunableCommand<any>>(
 	tree: T,
 	errorFormatter?: ErrorFormatterFn,
 ): Caller<T> {
@@ -264,13 +264,18 @@ export function caller<T extends CommandNode>(
  * @param {ErrorFormatterFn} [errorFormatter] - Optional error formatter callback.
  * @returns {Promise<void>} Resolves when the command is executed.
  */
-export async function create<T extends CommandNode>(
+export async function create<T extends CommandTree | RunableCommand<any>>(
 	tree: T,
 	errorFormatter?: ErrorFormatterFn,
 ): Promise<void> {
 	const args = process.argv.slice(2);
-	const { positionals, positionalIndexesInArgs } = parsePositionals(args);
 
+	if (isRunable(tree)) {
+		await parseCommandInput(parseArgs(args, tree), tree, errorFormatter);
+		return;
+	}
+
+	const { positionals, positionalIndexesInArgs } = parsePositionals(args);
 	let cmd = getCommands(tree, positionals, positionalIndexesInArgs);
 
 	if (cmd === null) throw new Error(ERROR.NO_COMMAND_FOUND);

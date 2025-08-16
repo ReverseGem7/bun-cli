@@ -150,7 +150,8 @@ export function parseArgs(
 ): ParsedArgs {
 	const flags: Record<string, ParsedFlag> = {};
 	const positionals: any[] = [];
-	const shortToLong = cmd.flags.shortToLong;
+	const shortToLong: Record<string, string> | undefined =
+		cmd.flags?.shortToLong;
 	const invalidFlags: string[] = [];
 
 	for (let i = 0; i < args.length; i++) {
@@ -180,7 +181,7 @@ export function parseArgs(
 
 			if (parts[1] === undefined) {
 				//Handle short flags agrupation, -f or --flag without value (true by default)
-				if (!isLong) {
+				if (!isLong && shortToLong) {
 					if (name.length > 1) {
 						for (const char of name) {
 							const key = shortToLong[char];
@@ -214,7 +215,7 @@ export function parseArgs(
 
 			if (!next || next.startsWith("-")) {
 				//Handle short flags agrupation, -f or --flag without value (true by default)
-				if (!isLong) {
+				if (!isLong && shortToLong) {
 					if (name.length > 1) {
 						for (const char of name) {
 							const key = shortToLong[char];
@@ -245,7 +246,7 @@ export function parseArgs(
 		}
 
 		const value = parseValue(rawValue);
-		if (!isLong) {
+		if (!isLong && shortToLong) {
 			if (name.length > 1) {
 				for (const char of name) {
 					const key = shortToLong[char];

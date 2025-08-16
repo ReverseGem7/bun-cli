@@ -13,7 +13,7 @@
 	"scripts": {
 		"format": "biome format --fix",
 		"lint": "biome lint --fix",
-		"build": "turbo run build",
+		"build": "turbo run -F=./packages/* build",
 		"check": "bun run biome check && bun run check:types",
 		"check:fix": "biome format --fix && biome lint --fix",
 		"check:types": "turbo run check:types",

@@ -37,41 +37,8 @@ Clivex supports any validation library that implements the [Standard Schema spec
 
 Here's a simple example to get you started:
 
-```typescript
-import * as z from "zod"; // or any Standard Schema library
-import { initCLI } from "clivex";
-
-const { flag, positional, command, commands, create } = initCLI.create();
-
-const cli = commands({
-  greet: command
-    .flags({
-      name: flag.input(z.string().default("World")).options({
-        short: "n",
-      }),
-      formal: flag.input(z.boolean()).options({
-        short: "f",
-      }),
-    })
-    .positionals([positional.input(z.string().optional())])
-    .run(({ flags, positionals }) => {
-      const name = positionals[0] || flags.name;
-      const greeting = flags.formal ? `Good day, ${name}!` : `Hello, ${name}!`;
-      console.log(greeting);
-    }),
-});
-
-runCLI(cli);
-```
-
-Run it:
-
 ```bash
-bun run index.ts greet --name Alice
-# Output: Hello, Alice!
-
-bun run index.ts greet --formal John
-# Output: Good day, John!
+npx create-clivex@latest
 ```
 
 ## 📚 Examples
@@ -327,6 +294,7 @@ bun test
 - [x] Positional arguments
 - [x] Subcommands
 - [x] Additional schema validators
+- [ ] Accept a flag as a positional
 - [ ] Strict mode
 - [ ] Command aliases
 - [ ] Global flags and positionals
